@@ -8,17 +8,9 @@ body {
 }
 
 body {
-	@apply flex
-		flex-grow
-		flex-col
-		antialiased
-		sm:subpixel-antialiased
-		dark:bg-black
-		dark:text-white;
+	@apply flex flex-grow flex-col antialiased sm:subpixel-antialiased dark:bg-black dark:text-white;
 }
 
 img {
-	@apply inline-block
-		select-none
-		outline-none;
+	@apply inline-block select-none outline-none;
 }

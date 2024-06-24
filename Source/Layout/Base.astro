@@ -1,8 +1,10 @@
 ---
 import "@Stylesheet/Base.css";
 
-// TODO Place your title and description here
-const { Title = "", Description = "" } = Astro.props;
+const {
+	Title = "🧩 Component —",
+	Description = "The component is a dynamic container for rendering views from frameworks like SolidJS and React.",
+} = Astro.props;
 
 interface Props {
 	Title?: string;
@@ -26,8 +28,7 @@ import { ViewTransitions } from "astro:transitions";
 		<meta charset="utf-8" />
 		<meta name="description" content={Description} />
 		<meta name="viewport" content="width=device-width,initial-scale=1.0" />
-		<!-- TODO Define your color theme in hex here -->
-		<meta name="theme-color" content="" />
+		<meta name="theme-color" content="#ffffff" />
 		<meta name="format-detection" content="telephone=no" />
 		<meta name="twitter:dnt" content="on" />
 

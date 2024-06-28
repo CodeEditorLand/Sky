@@ -4,6 +4,9 @@ export default (await import("astro/config")).defineConfig({
 	outDir: "./Target",
 	site: "https://localhost/",
 	compressHTML: false,
+	server: {
+		port: 9999,
+	},
 	integrations: [
 		(await import("@astrojs/solid-js")).default(),
 		// @ts-ignore

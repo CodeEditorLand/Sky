@@ -1,3 +1,5 @@
+import { fontFamily } from "tailwindcss/defaultTheme";
+
 export default {
 	content: [
 		"./Public/**/*.html",
@@ -9,6 +11,12 @@ export default {
 			center: true,
 		},
 		extend: {
+			transitionTimingFunction: {
+				apple: "cubic-bezier(0.25, 0.1, 0.25, 1)",
+			},
+			fontFamily: {
+				sans: ["Albert Sans", ...fontFamily.sans],
+			},
 			typography: {
 				DEFAULT: {
 					css: {
@@ -17,6 +25,13 @@ export default {
 						},
 					},
 				},
+			},
+			ringWidth: {
+				5: "5px",
+			},
+			colors: {
+				backgroundLight: "var(--background-light)",
+				backgroundDark: "var(--background-dark)",
 			},
 		},
 	},

@@ -26,6 +26,18 @@ export default (await import("astro/config")).defineConfig({
 		build: {
 			sourcemap: true,
 		},
+		plugins: [
+			// @ts-ignore
+			(await import("vite-plugin-node-polyfills")).nodePolyfills({
+				exclude: [],
+				globals: {
+					Buffer: false,
+					global: false,
+					process: false,
+				},
+				protocolImports: true,
+			}),
+		],
 	},
 }) as typeof defineConfig;
 

@@ -27,6 +27,8 @@
 		"Start": "astro dev",
 		"prepublishOnly": "astro build"
 	},
+
+	
 	"dependencies": {
 		"@astrojs/partytown": "2.1.1",
 		"@astrojs/prefetch": "0.4.1",

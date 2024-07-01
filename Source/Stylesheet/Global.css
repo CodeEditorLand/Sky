@@ -4,21 +4,11 @@ html {
 
 html,
 body {
-	@apply h-full
-		w-full;
+	@apply h-full w-full;
 }
 
 body {
-	@apply dark:bg-backgroundDark
-		flex
-		flex-grow
-		flex-col
-		bg-stone-100
-		tabular-nums
-		text-black
-		antialiased
-		sm:subpixel-antialiased
-		dark:text-white;
+	@apply dark:bg-backgroundDark flex flex-grow flex-col bg-stone-100 tabular-nums text-black antialiased sm:subpixel-antialiased dark:text-white;
 
 	font-variant-ligatures: no-common-ligatures;
 
@@ -39,21 +29,16 @@ body {
 ::selection {
 	text-shadow: none;
 
-	@apply bg-amber-400
-		text-black;
+	@apply bg-amber-400 text-black;
 }
 
 @media (prefers-color-scheme: dark) {
 	*::selection,
 	::selection {
-		@apply bg-orange-400
-			text-white;
+		@apply bg-orange-400 text-white;
 	}
 }
 
 img {
-	@apply inline-block
-		select-none
-		align-top
-		outline-none;
+	@apply inline-block select-none align-top outline-none;
 }

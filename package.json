@@ -1,21 +1,21 @@
 {
-	"name": "@codeeditorland/seed",
+	"name": "@codeeditorland/sky",
 	"version": "0.0.0",
 	"private": false,
-	"description": "🌱 Seed —",
+	"description": "🌌 Sky —",
 	"keywords": [
 		"astro",
-		"seed",
+		"sky",
 		"codeeditorland",
 		"playform"
 	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/Seed#readme",
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/Sky#readme",
 	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/Seed/issues"
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/Sky/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/CodeEditorLand/Seed.git"
+		"url": "git+https://github.com/CodeEditorLand/Sky.git"
 	},
 	"license": "SEE LICENSE IN LICENSE",
 	"author": {

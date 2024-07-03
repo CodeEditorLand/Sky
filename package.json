@@ -57,7 +57,7 @@
 		"deepmerge-ts": "7.0.3",
 		"dotenv": "16.4.5",
 		"eslint": "9.6.0",
-		"firebase": "10.12.2",
+		"firebase": "10.12.3",
 		"postcss": "8.4.39",
 		"postcss-combine-duplicated-selectors": "10.0.3",
 		"postcss-combine-media-query": "1.0.1",

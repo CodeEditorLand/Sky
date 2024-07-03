@@ -24,7 +24,7 @@
 		"url": "HTTPS://Editor.Land"
 	},
 	"scripts": {
-		"Start": "astro dev",
+		"Run": "astro dev",
 		"prepublishOnly": "astro build"
 	},
 	"dependencies": {

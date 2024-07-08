@@ -1,0 +1,4 @@
+var d=({children:n,Data:i})=>(i?.forEach(async(t,c)=>{const r=new URL(document.location.href),o=r.searchParams.get(t),e=(await import('./Create_DL6WtLip.mjs')).default((await import('./Persist_B_z_WQIn.mjs')).default([(await import('solid-js')).createSignal(""),t]),o);if(o&&(r.searchParams.delete(t),window.history.pushState({},document.title,r.href)),!e[0]())switch(c){case"Identifier":{e[1](crypto.randomUUID());break}case"Key":{crypto.subtle.generateKey({name:"AES-GCM",length:256},!0,["encrypt","decrypt"]).then(p=>crypto.subtle.exportKey("jwk",p).then(({k:m})=>e[1](m??"")));break}}(await import('./Context_DWsv8h9X.mjs')).default.Items[0]().set(t,e);}),createComponent(a.Provider,{value:a.defaultValue},n));const {_Function:a}=await import('./Context_DWsv8h9X.mjs');
+
+export { a as _Function, d as default };
+//# sourceMappingURL=Store_Dm1r7FDK.mjs.map

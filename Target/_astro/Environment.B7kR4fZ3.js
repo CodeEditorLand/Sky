@@ -1,0 +1,1 @@
+import{p,o}from"./Context.CevrpyGa.js";import{c as createComponent}from"./web.BwkxOWcj.js";import"./Editor.BTGcUlfm.js";var i=({children:e,Data:r})=>p.Data[1](r)&&createComponent(o.Provider,{get value(){return o.defaultValue},children:e});export{i as default};

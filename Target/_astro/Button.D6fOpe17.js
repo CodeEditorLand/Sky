@@ -1,3 +1,0 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["_astro/Merge.CvOgcbzx.js","_astro/Editor.8RDmBfOP.js","_astro/solid.-melTDdq.js"])))=>i.map(i=>d[i]);
-import{_ as o}from"./Editor.8RDmBfOP.js";import"./solid.-melTDdq.js";var _=t=>{const{Action:r,Type:n,children:e,Class:a,Label:i}=l({children:"",Type:"button",Action:()=>{},Class:"",Label:""},t);return h("button",{class:`Button ${typeof a=="function"?a(t.Fn):a}`.trim(),onClick:()=>{r(t.Fn),t.Fn?.blur()},type:n,"aria-label":i},e(()=>e)())};await o(()=>import("./solid.-melTDdq.js"),[]);const{default:l}=await o(async()=>{const{default:t}=await import("./Merge.CvOgcbzx.js");return{default:t}},__vite__mapDeps([0,1,2]));export{l as Merge,_ as default};
-//# sourceMappingURL=Button.D6fOpe17.js.map

@@ -5,7 +5,7 @@
 		"jsxImportSource": "solid-js",
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"moduleResolution": "bundler",
-		"types": ["astro/client", "astro/env"]
+		"types": ["astro/client", "astro/env", "solid-js"]
 	},
 	"extends": "@playform/build/tsconfig",
 	"include": ["Source"]

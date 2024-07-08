@@ -1,0 +1,2 @@
+import{_ as n}from"./Editor.8RDmBfOP.js";import"./solid.-melTDdq.js";var _=async(...[t])=>{if(t instanceof Map){const e={};for(const[r,a]of t.entries())a instanceof Map?e[r]=await(await n(async()=>{const{default:o}=await Promise.resolve().then(()=>f);return{default:o}},void 0)).default(a):e[r]=a;return e}return t};const f=Object.freeze(Object.defineProperty({__proto__:null,default:_},Symbol.toStringTag,{value:"Module"}));export{_ as default};
+//# sourceMappingURL=Put.Bqy2pGm-.js.map

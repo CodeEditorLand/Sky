@@ -10,6 +10,7 @@ export default (await import("astro/config")).defineConfig({
 	integrations: [
 		(await import("@astrojs/solid-js")).default({
 			devtools: true,
+			include: ["../Wind/Target"],
 		}),
 		// @ts-ignore
 		import.meta.env.MODE === "production"

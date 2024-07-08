@@ -7,7 +7,7 @@
 	@apply relative block w-full overflow-hidden rounded-2xl p-0 font-normal outline-4 outline-white hover:shadow-xl hover:shadow-orange-500/50 sm:max-w-full dark:outline-black dark:hover:shadow-blue-500/50;
 
 	.Help {
-		@apply ease-apple relative z-10 flex border-b border-b-slate-300 bg-black/5 px-6 py-4 text-center leading-8 transition-all duration-150 dark:border-b-black dark:bg-white/5 dark:text-white;
+		@apply ease-Land relative z-10 flex border-b border-b-slate-300 bg-black/5 px-6 py-4 text-center leading-8 transition-all duration-150 dark:border-b-black dark:bg-white/5 dark:text-white;
 
 		.Tip {
 			@apply inline-block;
@@ -37,7 +37,7 @@
 	}
 
 	.Error {
-		@apply ease-apple absolute left-0 top-0 z-30 w-full cursor-pointer bg-stone-50 px-4 py-3 text-base font-normal leading-10 text-black transition-all duration-150 hover:bg-stone-100 dark:bg-red-700 dark:text-white hover:dark:bg-black/95 hover:dark:text-blue-300;
+		@apply ease-Land absolute left-0 top-0 z-30 w-full cursor-pointer bg-stone-50 px-4 py-3 text-base font-normal leading-10 text-black transition-all duration-150 hover:bg-stone-100 dark:bg-red-700 dark:text-white hover:dark:bg-black/95 hover:dark:text-blue-300;
 
 		span {
 			@apply align-middle;
@@ -79,11 +79,11 @@
 
 		.monaco-scrollable-element > .scrollbar {
 			width: 16px !important;
-			@apply ease-apple transition-opacity;
+			@apply ease-Land transition-opacity;
 		}
 
 		.quick-input-widget {
-			@apply ease-apple rounded-t-none hover:shadow-xl hover:shadow-orange-500/50 dark:hover:shadow-blue-500/50;
+			@apply ease-Land rounded-t-none hover:shadow-xl hover:shadow-orange-500/50 dark:hover:shadow-blue-500/50;
 
 			box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
 				var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow) !important;

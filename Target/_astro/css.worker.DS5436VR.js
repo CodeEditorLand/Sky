@@ -1,1 +1,0 @@
-function WorkerWrapper(r){return new Worker("/_astro/css.worker-BLNXXCBb.js",{name:r?.name})}export{WorkerWrapper as default};

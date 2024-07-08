@@ -1,1 +1,0 @@
-function WorkerWrapper(r){return new Worker("/_astro/ts.worker-BJ1QOPgn.js",{name:r?.name})}export{WorkerWrapper as default};

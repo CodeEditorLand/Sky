@@ -1,1 +1,0 @@
-function WorkerWrapper(r){return new Worker("/_astro/html.worker-C3D9yICO.js",{name:r?.name})}export{WorkerWrapper as default};

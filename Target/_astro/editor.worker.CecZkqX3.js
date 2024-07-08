@@ -1,1 +1,0 @@
-function WorkerWrapper(r){return new Worker("/_astro/editor.worker-B_ByQ-ug.js",{name:r?.name})}export{WorkerWrapper as default};

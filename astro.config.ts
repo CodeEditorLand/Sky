@@ -3,7 +3,7 @@ export default (await import("astro/config")).defineConfig({
 	publicDir: "./Public",
 	outDir: "./Target",
 	site: "http://localhost",
-	compressHTML: false,
+	compressHTML: true,
 	server: {
 		port: 9999,
 	},
@@ -11,7 +11,6 @@ export default (await import("astro/config")).defineConfig({
 		(await import("@astrojs/solid-js")).default({
 			// TODO: ONLY ENABLE IN DEV MODE
 			devtools: true,
-			include: ["@codeeditorland/wind/Target/Element/Page/Editor.js"],
 		}),
 		// @ts-ignore
 		import.meta.env.MODE === "production"
@@ -29,7 +28,6 @@ export default (await import("astro/config")).defineConfig({
 	vite: {
 		build: {
 			sourcemap: true,
-			minify: false,
 		},
 	},
 }) as typeof defineConfig;

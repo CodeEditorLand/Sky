@@ -1,18 +1,16 @@
 ---
-(await import("dotenv")).config();
+// import Page from "@codeeditorland/wind/Target/Element/Page/Editor.js";
+import Layout from "@Layout/Base.astro";
 
-const { API, Socket } = (
-	(await import("@codeeditorland/wind/Target/Library/Environment.js"))
-		._Function as Exclude<typeof _Function, boolean>
-).parse(process.env);
+// import { _Function as Environment } from "@codeeditorland/wind/Target/Library/Environment.js";
 
-import type { _Function } from "@codeeditorland/wind/Target/Library/Environment.js";
+import { config } from "dotenv";
 
-export const { default: Layout } = await import("@Layout/Base.astro");
+config();
 
-export const { default: Page } = await import(
-	"@codeeditorland/wind/Target/Element/Page/Editor.js"
-);
+// const { API, Socket } = (
+// 	Environment as Exclude<typeof Environment, boolean>
+// ).parse(process.env);
 ---
 
 <!--
@@ -20,5 +18,5 @@ export const { default: Page } = await import(
 	<Layout Font={["/Font/AlbertSans/800.css"]}>
 -->
 <Layout>
-	<Page client:only="solid-js" {API} {Socket} />
+	<!-- <Page client:only="solid-js" {API} {Socket} /> -->
 </Layout>

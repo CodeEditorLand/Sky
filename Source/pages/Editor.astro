@@ -15,7 +15,10 @@ export const { default: Page } = await import(
 );
 ---
 
-<!-- <Layout Font={["/Font/AlbertSans/800.css"]}> -->
+<!--
+	TODO: Implement font changes in layout 
+	<Layout Font={["/Font/AlbertSans/800.css"]}>
+-->
 <Layout>
 	<Page client:only="solid-js" {API} {Socket} />
 </Layout>

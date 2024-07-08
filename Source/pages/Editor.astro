@@ -9,13 +9,12 @@ config();
 const { API, Socket } = (
 	Environment as Exclude<typeof Environment, boolean>
 ).parse(process.env);
+
+import "@Stylesheet/Wind/Element/Action.scss";
+import "@Stylesheet/Wind/Element/Editor.scss";
 ---
 
-<Layout Font={["/Font/AlbertSans/800.css"]}>
+<!-- <Layout Font={["/Font/AlbertSans/800.css"]}> -->
+<Layout>
 	<Page client:only="solid-js" {API} {Socket} />
 </Layout>
-
-<style>
-	@import "@codeeditorland/wind/Element/Action.scss";
-	@import "@codeeditorland/wind/Element/Editor.scss";
-</style>

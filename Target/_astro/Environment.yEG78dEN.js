@@ -1,0 +1,1 @@
+import{p as r,o as a}from"./Context.C2cu0PLS.js";import"./Editor.CHcRbLoL.js";import"./solid.-melTDdq.js";var m=({children:e,Data:t})=>r.Data[1](t)&&React.createElement(a.Provider,{value:a.defaultValue},e);export{m as default};

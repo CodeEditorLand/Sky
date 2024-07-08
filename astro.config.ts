@@ -3,7 +3,7 @@ export default (await import("astro/config")).defineConfig({
 	publicDir: "./Public",
 	outDir: "./Target",
 	site: "http://localhost",
-	// compressHTML: true,
+	compressHTML: false,
 	server: {
 		port: 9999,
 	},
@@ -28,8 +28,8 @@ export default (await import("astro/config")).defineConfig({
 	vite: {
 		build: {
 			sourcemap: true,
+			minify: false,
 		},
-		plugins: [(await import("vite-plugin-solid")).default()],
 	},
 }) as typeof defineConfig;
 

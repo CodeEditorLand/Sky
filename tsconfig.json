@@ -5,7 +5,9 @@
 		"jsxImportSource": "solid-js",
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"moduleResolution": "bundler",
-		"types": ["astro/client", "astro/env", "solid-js"]
+		"types": ["astro/client", "astro/env"],
+		"jsxFactory": "h",
+		"jsxFragmentFactory": "Fragment"
 	},
 	"extends": "@playform/build/tsconfig",
 	"include": ["Source"]

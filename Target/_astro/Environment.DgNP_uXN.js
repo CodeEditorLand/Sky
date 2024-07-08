@@ -1,0 +1,1 @@
+import{p,o}from"./Context.5HQv7iPr.js";import"./Editor.G0rPb_Kj.js";import"./solid.f9AvF4Qv.js";var i=({children:r,Data:t})=>p.Data[1](t)&&createComponent(o.Provider,{value:o.defaultValue},r);export{i as default};

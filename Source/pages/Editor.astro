@@ -1,0 +1,16 @@
+---
+import Page from "@codeeditorland/wind/Target/Element/Page/Index.js";
+import Layout from "@Layout/Base.astro";
+import { _Function as Environment } from "@codeeditorland/wind/Target/Library/Environment.js";
+import { config } from "dotenv";
+
+config();
+
+const { API, Socket } = (
+	Environment as Exclude<typeof Environment, boolean>
+).parse(process.env);
+---
+
+<Layout Font={["/Font/AlbertSans/800.css"]}>
+	<Page client:only="solid-js" {API} {Socket} />
+</Layout>

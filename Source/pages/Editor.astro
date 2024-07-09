@@ -1,22 +1,8 @@
 ---
 import Page from "@codeeditorland/wind/Target/Element/Page/Editor.js";
 import Layout from "@Layout/Base.astro";
-
-// import { _Function as Environment } from "@codeeditorland/wind/Target/Library/Environment.js";
-
-import { config } from "dotenv";
-
-config();
-
-// const { API, Socket } = (
-// 	Environment as Exclude<typeof Environment, boolean>
-// ).parse(process.env);
 ---
 
-<!--
-	TODO: Implement font changes in layout 
-	<Layout Font={["/Font/AlbertSans/800.css"]}>
--->
 <Layout>
 	<Page client:only="solid-js" />
 </Layout>

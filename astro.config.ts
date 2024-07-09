@@ -30,6 +30,14 @@ export default (await import("astro/config")).defineConfig({
 	vite: {
 		build: {
 			sourcemap: true,
+			watch: {
+				include: ["./node_modules/@codeeditorland/wind/**/*"],
+			},
+			rollupOptions: {
+				watch: {
+					include: ["./node_modules/@codeeditorland/wind/**/*"],
+				},
+			},
 		},
 	},
 }) as typeof defineConfig;

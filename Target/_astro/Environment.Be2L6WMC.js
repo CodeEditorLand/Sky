@@ -1,1 +1,0 @@
-import{p as t,o as r}from"./Context.CAOFde7Z.js";import{c as o}from"./web.Dh-3o7rH.js";import"./Editor.BrGPxqy1.js";var p=({children:a,Data:e})=>t.Data[1](e)&&o(r.Provider,{get value(){return r.defaultValue},children:a});export{p as default};

@@ -9,6 +9,7 @@ export default (await import("astro/config")).defineConfig({
 	},
 	integrations: [
 		(await import("@astrojs/solid-js")).default({
+			// @ts-ignore
 			devtools: import.meta.env.DEV,
 		}),
 		// @ts-ignore

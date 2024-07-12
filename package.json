@@ -56,7 +56,7 @@
 		"cssnano-preset-advanced": "7.0.4",
 		"deepmerge-ts": "7.0.3",
 		"dotenv": "16.4.5",
-		"eslint": "9.6.0",
+		"eslint": "9.7.0",
 		"firebase": "10.12.3",
 		"postcss": "8.4.39",
 		"postcss-combine-duplicated-selectors": "10.0.3",

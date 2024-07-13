@@ -2,7 +2,7 @@ export default (await import("astro/config")).defineConfig({
 	srcDir: "./Source",
 	publicDir: "./Public",
 	outDir: "./Target",
-	site: "http://172.16.0.2",
+	site: "http://localhost",
 	compressHTML: true,
 	server: {
 		port: 9999,
@@ -31,12 +31,12 @@ export default (await import("astro/config")).defineConfig({
 		build: {
 			sourcemap: true,
 		},
-		clearScreen: false,
-		server: {
-			port: 9999,
-			strictPort: true,
-			host: "172.16.0.2",
-		},
+		// clearScreen: false,
+		// server: {
+		// 	port: 9999,
+		// 	strictPort: true,
+		// 	host: "localhost",
+		// },
 	},
 }) as typeof defineConfig;
 

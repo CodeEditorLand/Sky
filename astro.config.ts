@@ -21,13 +21,9 @@ export default (await import("astro/config")).defineConfig({
 		(await import("@astrojs/prefetch")).default(),
 		(await import("@playform/format")).default({ Logger: 1 }),
 		(await import("@playform/compress")).default({
-			Action: {
-
-			},
+			Action: {},
 			Cache: false,
-			CSS: {
-
-			},
+			CSS: {},
 			Exclude: [],
 		}),
 	],
@@ -40,12 +36,9 @@ export default (await import("astro/config")).defineConfig({
 		build: {
 			sourcemap: true,
 		},
-		// clearScreen: false,
-		// server: {
-		// 	port: 9999,
-		// 	strictPort: true,
-		// 	host: "localhost",
-		// },
+		optimizeDeps: {
+			exclude: ["@modular-forms/solid"],
+		},
 	},
 }) as typeof defineConfig;
 

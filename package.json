@@ -70,7 +70,7 @@
 		"solid-js": "1.8.18",
 		"swup": "4.7.0",
 		"tailwindcss": "4.0.0-alpha.17",
-		"typescript": "5.6.0-dev.20240718",
+		"typescript": "5.6.0-dev.20240719",
 		"vite-plugin-externalize-deps": "0.8.0",
 		"zod": "4.0.0-beta.1"
 	},

@@ -4,6 +4,7 @@ export default (await import("astro/config")).defineConfig({
 	outDir: "./Target",
 	site: "http://localhost",
 	compressHTML: true,
+	prefetch: true,
 	server: {
 		port: 9999,
 	},

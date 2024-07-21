@@ -69,9 +69,9 @@
 		"solid-js": "1.8.18",
 		"swup": "4.7.0",
 		"tailwindcss": "*",
-		"typescript": "5.6.0-dev.20240719",
+		"typescript": "*",
 		"vite-plugin-externalize-deps": "0.8.0",
-		"zod": "3.23.8"
+		"zod": "*"
 	},
 	"publishConfig": {
 		"provenance": true,

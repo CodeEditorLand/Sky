@@ -38,12 +38,18 @@
 		"@playform/format": "0.0.7",
 		"@playform/inline": "0.0.7",
 		"@swup/body-class-plugin": "3.2.0",
+<<<<<<< HEAD
 		"@swup/fade-theme": "2.0.1",
+=======
+>>>>>>> Fork/Current
 		"@swup/head-plugin": "2.2.0",
 		"@swup/overlay-theme": "2.0.1",
 		"@swup/preload-plugin": "3.2.10",
 		"@swup/scroll-plugin": "3.3.2",
+<<<<<<< HEAD
 		"@swup/slide-theme": "2.0.1",
+=======
+>>>>>>> Fork/Current
 		"@tailwindcss/aspect-ratio": "0.4.2",
 		"@tailwindcss/forms": "0.5.7",
 		"@tailwindcss/typography": "0.5.13",
@@ -64,9 +70,12 @@
 		"postcss-import": "16.1.0",
 		"postcss-reporter": "7.1.0",
 		"postcss-url": "10.1.3",
+<<<<<<< HEAD
 		"sass": "1.77.8",
 		"solid-devtools": "0.30.1",
 		"solid-js": "1.8.18",
+=======
+>>>>>>> Fork/Current
 		"swup": "4.7.0",
 		"tailwindcss": "*",
 		"typescript": "*",

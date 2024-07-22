@@ -6,6 +6,10 @@
 @layer base {
 	:root {
 		--background-light: theme("colors.white");
+<<<<<<< HEAD
 		--background-dark: theme("colors.neutral.950");
+=======
+		--background-dark: theme("colors.black");
+>>>>>>> Fork/Current
 	}
 }

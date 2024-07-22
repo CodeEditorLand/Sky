@@ -38,9 +38,12 @@ export default (await import("astro/config")).defineConfig({
 		build: {
 			sourcemap: true,
 		},
+<<<<<<< HEAD
 		optimizeDeps: {
 			exclude: ["@modular-forms/solid"],
 		},
+=======
+>>>>>>> Fork/Current
 		resolve: {
 			preserveSymlinks: true,
 		},

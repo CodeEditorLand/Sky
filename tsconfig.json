@@ -1,24 +1,18 @@
 {
-<<<<<<< HEAD
-	"compilerOptions": {
-		"baseUrl": "./",
-		"jsx": "preserve",
-		"jsxImportSource": "solid-js",
-		"lib": ["ESNext", "DOM", "DOM.Iterable"],
-		"moduleResolution": "Bundler",
-		"types": ["astro/client", "astro/env"],
-		"jsxFactory": "createComponent",
-		"jsxFragmentFactory": "Fragment"
-=======
 	"$schema": "https://json.schemastore.org/tsconfig",
 	"compilerOptions": {
 		"baseUrl": "./",
 		"emitDeclarationOnly": false,
+		"jsx": "preserve",
+		"jsxFactory": "createComponent",
+		"jsxFragmentFactory": "Fragment",
+		"jsxImportSource": "solid-js",
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"moduleResolution": "Bundler",
 		"noEmit": true,
 		"outDir": "Target",
 		"rootDir": ".",
 		"types": ["astro/client", "astro/env"]
->>>>>>> Fork/Current
 	},
 	"extends": "@playform/build/tsconfig",
 	"include": ["Source"]

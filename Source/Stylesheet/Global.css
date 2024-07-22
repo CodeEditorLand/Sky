@@ -8,24 +8,14 @@ body {
 }
 
 body {
-<<<<<<< HEAD
 	@apply dark:bg-backgroundDark flex flex-grow flex-col bg-stone-100 tabular-nums text-black antialiased sm:subpixel-antialiased dark:text-white;
-=======
-	@apply flex flex-grow flex-col bg-white tabular-nums text-black antialiased sm:subpixel-antialiased dark:bg-black dark:text-white;
->>>>>>> Fork/Current
 
 	font-variant-ligatures: no-common-ligatures;
 
 	--swup-overlay-theme-color: white;
-<<<<<<< HEAD
-	--swup-overlay-theme-duration: 0.2s;
-	--swup-overlay-theme-delay: 0s;
-	--swup-overlay-theme-scale: 1.2;
-=======
 	--swup-overlay-theme-duration: 0.21s;
 	--swup-overlay-theme-delay: 0s;
 	--swup-overlay-theme-scale: 0.21;
->>>>>>> Fork/Current
 	--swup-overlay-theme-skew: 0deg;
 }
 
@@ -52,7 +42,6 @@ body {
 img {
 	@apply inline-block select-none align-top outline-none;
 }
-<<<<<<< HEAD
 
 @media (min-width: 768px) {
 	h1,
@@ -65,5 +54,3 @@ img {
 		padding: 4px 0 !important;
 	}
 }
-=======
->>>>>>> Fork/Current

@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 @tailwind variants;
-<<<<<<< HEAD
 
 @layer base {
 	:root {
@@ -10,5 +9,3 @@
 		--background-dark: theme("colors.neutral.950");
 	}
 }
-=======
->>>>>>> Fork/Current

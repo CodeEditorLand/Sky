@@ -14,11 +14,7 @@ export default {
 		},
 		extend: {
 			transitionTimingFunction: {
-<<<<<<< HEAD
 				Land: "cubic-bezier(0.25, 0.1, 0.25, 1)",
-=======
-				apple: "cubic-bezier(0.21, 0.1, 0.21, 1)",
->>>>>>> Fork/Current
 			},
 			fontFamily: {
 				sans: ["Albert Sans", ...fontFamily.sans],
@@ -32,12 +28,9 @@ export default {
 					},
 				},
 			},
-<<<<<<< HEAD
 			ringWidth: {
 				5: "5px",
 			},
-=======
->>>>>>> Fork/Current
 			colors: {
 				backgroundLight: "var(--background-light)",
 				backgroundDark: "var(--background-dark)",

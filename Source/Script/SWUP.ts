@@ -1,9 +1,5 @@
 export default new (await import("swup")).default({
-<<<<<<< HEAD
-	containers: ["#swup"],
-=======
 	containers: ["#footer", "#main", "#header"],
->>>>>>> Fork/Current
 	plugins: [
 		new (
 			await import(

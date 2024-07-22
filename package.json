@@ -1,8 +1,13 @@
 {
 	"name": "@codeeditorland/sky",
 	"version": "0.0.1",
+<<<<<<< HEAD
 	"private": false,
 	"description": "🌌 Sky —",
+=======
+	"private": true,
+	"description": "📄 Starter —",
+>>>>>>> Fork/Current
 	"keywords": [
 		"astro",
 		"sky",
@@ -74,7 +79,7 @@
 		"zod": "*"
 	},
 	"publishConfig": {
-		"access": "public",
+		"access": "restricted",
 		"provenance": true
 	}
 }

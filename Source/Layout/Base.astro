@@ -1,8 +1,15 @@
 ---
+<<<<<<< HEAD
 const {
 	Title = "🌌 Sky —",
 	Description = "The sky is a dynamic container for rendering views from frameworks like SolidJS and React.",
 } = Astro.props;
+=======
+import "@Stylesheet/Base.css";
+
+// TODO Place your title and description here
+const { Title = "", Description = "" } = Astro.props;
+>>>>>>> Fork/Current
 
 interface Props {
 	Title?: string;
@@ -11,8 +18,11 @@ interface Props {
 
 import { Head } from "astro-capo";
 import { ViewTransitions } from "astro:transitions";
+<<<<<<< HEAD
 
 import "@Stylesheet/Base.css";
+=======
+>>>>>>> Fork/Current
 ---
 
 <!doctype html>
@@ -28,7 +38,12 @@ import "@Stylesheet/Base.css";
 		<meta charset="utf-8" />
 		<meta name="description" content={Description} />
 		<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<<<<<<< HEAD
 		<meta name="theme-color" content="#ffffff" />
+=======
+		<!-- TODO Define your color theme in hex here -->
+		<meta name="theme-color" content="" />
+>>>>>>> Fork/Current
 		<meta name="format-detection" content="telephone=no" />
 		<meta name="twitter:dnt" content="on" />
 
@@ -53,8 +68,17 @@ import "@Stylesheet/Base.css";
 		<ViewTransitions />
 	</Head>
 	<body>
+<<<<<<< HEAD
 		<div class="grow" id="swup">
 			<slot />
 		</div>
+=======
+		<div class="grow">
+			<slot />
+		</div>
+		<script>
+			import "@Script/Firebase";
+		</script>
+>>>>>>> Fork/Current
 	</body>
 </html>

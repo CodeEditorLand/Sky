@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
 	"compilerOptions": {
 		"baseUrl": "./",
 		"jsx": "preserve",
@@ -8,6 +9,16 @@
 		"types": ["astro/client", "astro/env"],
 		"jsxFactory": "createComponent",
 		"jsxFragmentFactory": "Fragment"
+=======
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		"baseUrl": "./",
+		"emitDeclarationOnly": false,
+		"noEmit": true,
+		"outDir": "Target",
+		"rootDir": ".",
+		"types": ["astro/client", "astro/env"]
+>>>>>>> Fork/Current
 	},
 	"extends": "@playform/build/tsconfig",
 	"include": ["Source"]

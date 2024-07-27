@@ -1,0 +1,1 @@
+function e(e){return new Worker("/_astro/editor.worker-DZI62frv.js",{name:e?.name})}export{e as default};

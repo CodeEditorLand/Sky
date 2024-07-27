@@ -1,1 +1,0 @@
-function e(e){return new Worker("/_astro/css.worker-CrwcPpw_.js",{name:e?.name})}export{e as default};

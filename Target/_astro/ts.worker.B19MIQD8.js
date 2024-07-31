@@ -1,0 +1,1 @@
+function e(e){return new Worker("/_astro/ts.worker-DTAl9Pq_.js",{name:e?.name})}export{e as default};

@@ -1,1 +1,0 @@
-function e(e){return new Worker("/_astro/css.worker-3CSb14Kd.js",{name:e?.name})}export{e as default};

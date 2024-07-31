@@ -55,7 +55,7 @@
 		"cssnano-preset-advanced": "7.0.4",
 		"deepmerge-ts": "7.1.0",
 		"dotenv": "16.4.5",
-		"firebase": "10.12.4",
+		"firebase": "10.12.5-20240730204232",
 		"postcss": "8.4.40",
 		"postcss-combine-duplicated-selectors": "10.0.3",
 		"postcss-combine-media-query": "1.0.1",

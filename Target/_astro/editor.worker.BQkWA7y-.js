@@ -1,1 +1,0 @@
-function e(e){return new Worker("/_astro/editor.worker-kR8uh3Gf.js",{name:e?.name})}export{e as default};

@@ -1,5 +1,1 @@
-function e(r) {
-	return new Worker("/_astro/editor.worker-kR8uh3Gf.js", { name: r?.name });
-}
-export { e as default };
-//# sourceMappingURL=editor.worker.BQkWA7y-.js.map
+function e(e){return new Worker("/_astro/editor.worker-kR8uh3Gf.js",{name:e?.name})}export{e as default};

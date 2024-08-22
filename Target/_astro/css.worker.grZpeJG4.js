@@ -1,2 +1,1 @@
-function e(r){return new Worker("/_astro/css.worker-CMHaplt6.js",{name:r?.name})}export{e as default};
-//# sourceMappingURL=css.worker.grZpeJG4.js.map
+function e(e){return new Worker("/_astro/css.worker-CMHaplt6.js",{name:e?.name})}export{e as default};

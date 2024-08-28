@@ -28,7 +28,7 @@
 		"prepublishOnly": "astro build"
 	},
 	"dependencies": {
-		"@astrojs/partytown": "2.1.1",
+		"@astrojs/partytown": "2.1.2",
 		"@astrojs/sitemap": "3.1.6",
 		"@astrojs/solid-js": "4.4.1",
 		"@codeeditorland/common": "0.0.6",

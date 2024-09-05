@@ -16,9 +16,9 @@ export default (await import("astro/config")).defineConfig({
 			devtools: import.meta.env.DEV,
 		}),
 		// @ts-ignore
-		import.meta.env.MODE === "production"
-			? (await import("astrojs-service-worker")).default()
-			: null,
+		// import.meta.env.MODE === "production"
+		// 	? (await import("astrojs-service-worker")).default()
+		// 	: null,
 		(await import("@astrojs/sitemap")).default(),
 		(await import("@playform/inline")).default({ Logger: 1 }),
 		(await import("@astrojs/prefetch")).default(),
@@ -38,7 +38,11 @@ export default (await import("astro/config")).defineConfig({
 		optimizeDeps: {
 			...(process.env.NODE_ENV === "development"
 				? {
-						exclude: ["@codeeditorland/wind"],
+						exclude: [
+							"@codeeditorland/common",
+							"@codeeditorland/editor",
+							"@codeeditorland/wind",
+						],
 					}
 				: {}),
 		},
@@ -49,5 +53,6 @@ export default (await import("astro/config")).defineConfig({
 			devSourcemap: true,
 			transformer: "postcss",
 		},
+		plugins: [(await import("vite-plugin-top-level-await")).default()],
 	},
 }) as typeof defineConfig;

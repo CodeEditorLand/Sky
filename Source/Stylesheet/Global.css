@@ -10,6 +10,8 @@ body {
 body {
 	@apply dark:bg-backgroundDark flex flex-grow flex-col bg-stone-100 tabular-nums text-black antialiased sm:subpixel-antialiased dark:text-white;
 
+	background: transparent;
+
 	font-variant-ligatures: no-common-ligatures;
 
 	--swup-overlay-theme-color: white;

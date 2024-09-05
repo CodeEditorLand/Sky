@@ -1,4 +1,9 @@
 ---
+import { Head } from "astro-capo";
+import { ViewTransitions } from "astro:transitions";
+
+import "@Stylesheet/Base.css";
+
 const {
 	Title = "🌌 Sky —",
 	Description = "The sky is a dynamic container for rendering views from frameworks like SolidJS and React.",
@@ -8,11 +13,6 @@ interface Props {
 	Title?: string;
 	Description?: string;
 }
-
-import { Head } from "astro-capo";
-import { ViewTransitions } from "astro:transitions";
-
-import "@Stylesheet/Base.css";
 ---
 
 <!doctype html>
@@ -33,7 +33,6 @@ import "@Stylesheet/Base.css";
 		<meta name="twitter:dnt" content="on" />
 
 		<!-- Links -->
-		rel="preconnect"
 		<link
 			rel="manifest"
 			href="/site.webmanifest"
@@ -46,18 +45,28 @@ import "@Stylesheet/Base.css";
 
 		<slot name="styles" />
 
-		<script>
-			import "@Script/SWUP";
-		</script>
-
 		<slot name="scripts" />
 
 		<!-- Favicon -->
 		<ViewTransitions />
 	</Head>
 	<body>
+		<div class="grow p-5 text-center">
+			<ul class="flex">
+				<li class="px-5">
+					<a href="/Editor">Editor</a>
+				</li>
+				<li class="px-5">
+					<a href="/VSCode">VSCode</a>
+				</li>
+			</ul>
+		</div>
 		<div class="grow" id="swup">
 			<slot />
 		</div>
+
+		<script>
+			// import "@Script/SWUP";
+		</script>
 	</body>
 </html>

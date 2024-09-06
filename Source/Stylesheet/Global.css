@@ -4,27 +4,13 @@ html {
 
 html,
 body {
-	@apply h-full w-full;
+	@apply h-full w-full bg-transparent;
 }
 
 body {
-	@apply dark:bg-backgroundDark flex flex-grow flex-col bg-stone-100 tabular-nums text-black antialiased sm:subpixel-antialiased dark:text-white;
-
-	background: transparent;
+	@apply flex flex-grow flex-col bg-stone-100 tabular-nums text-black antialiased sm:subpixel-antialiased;
 
 	font-variant-ligatures: no-common-ligatures;
-
-	--swup-overlay-theme-color: white;
-	--swup-overlay-theme-duration: 0.21s;
-	--swup-overlay-theme-delay: 0s;
-	--swup-overlay-theme-scale: 0.21;
-	--swup-overlay-theme-skew: 0deg;
-}
-
-@media (prefers-color-scheme: dark) {
-	body {
-		--swup-overlay-theme-color: black;
-	}
 }
 
 *::selection,
@@ -32,13 +18,6 @@ body {
 	text-shadow: none;
 
 	@apply bg-amber-400 text-black;
-}
-
-@media (prefers-color-scheme: dark) {
-	*::selection,
-	::selection {
-		@apply bg-orange-400 text-white;
-	}
 }
 
 img {

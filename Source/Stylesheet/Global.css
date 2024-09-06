@@ -8,7 +8,7 @@ body {
 }
 
 body {
-	@apply flex flex-grow flex-col bg-stone-100 tabular-nums text-black antialiased sm:subpixel-antialiased;
+	@apply flex flex-grow flex-col tabular-nums text-black antialiased sm:subpixel-antialiased;
 
 	font-variant-ligatures: no-common-ligatures;
 }

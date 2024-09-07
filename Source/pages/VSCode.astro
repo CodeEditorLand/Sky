@@ -3,9 +3,11 @@ import Layout from "@Layout/Base.astro";
 ---
 
 <Layout>
-	<script slot="scripts">
-		performance.mark("code/didStartRenderer");
-	</script>
+	<Fragment slot="scripts">
+		<script>
+			performance.mark("code/didStartRenderer");
+		</script>
+	</Fragment>
 
 	<script>
 		const baseUrl = new URL(

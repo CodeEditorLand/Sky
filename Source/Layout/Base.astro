@@ -1,6 +1,6 @@
 ---
 import { Head } from "astro-capo";
-import { ViewTransitions } from "astro:transitions";
+// import { ViewTransitions } from "astro:transitions";
 
 import "@Stylesheet/Base.css";
 
@@ -48,9 +48,9 @@ interface Props {
 		<slot name="scripts" />
 
 		<!-- Favicon -->
-		<ViewTransitions />
+		<!-- <ViewTransitions /> -->
 	</Head>
-	<body>
+	<body aria-label="">
 		<div class="grow p-5 text-center">
 			<ul class="flex">
 				<li class="px-5">
@@ -61,12 +61,8 @@ interface Props {
 				</li>
 			</ul>
 		</div>
-		<div class="grow" id="swup">
+		<div class="grow">
 			<slot />
 		</div>
-
-		<script>
-			// import "@Script/SWUP";
-		</script>
 	</body>
 </html>

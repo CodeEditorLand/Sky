@@ -42,6 +42,7 @@ export default (await import("astro/config")).defineConfig({
 							"@codeeditorland/common",
 							"@codeeditorland/editor",
 							"@codeeditorland/wind",
+							"@codeeditorland/vanilla",
 						],
 					}
 				: {}),

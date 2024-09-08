@@ -1,33 +1,15 @@
 ---
 import { Head } from "astro-capo";
-// import { ViewTransitions } from "astro:transitions";
 
 import "@Stylesheet/Base.css";
-
-const {
-	Title = "🌌 Sky —",
-	Description = "The sky is a dynamic container for rendering views from frameworks like SolidJS and React.",
-} = Astro.props;
-
-interface Props {
-	Title?: string;
-	Description?: string;
-}
 ---
 
 <!doctype html>
 <html lang="en" class="no-js" dir="ltr">
 	<Head>
-		<script>
-			document.documentElement.classList.remove("no-js");
-			document.documentElement.classList.add("js");
-		</script>
-
 		<!-- Meta -->
-		<title>{Title}</title>
 		<meta charset="utf-8" />
-		<meta name="description" content={Description} />
-		<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="theme-color" content="#ffffff" />
 		<meta name="format-detection" content="telephone=no" />
 		<meta name="twitter:dnt" content="on" />
@@ -43,12 +25,9 @@ interface Props {
 			@import "@Stylesheet/Global.css";
 		</style>
 
-		<slot name="styles" />
+		<slot name="StyleHead" />
 
-		<slot name="scripts" />
-
-		<!-- Favicon -->
-		<!-- <ViewTransitions /> -->
+		<slot name="ScriptHead" />
 	</Head>
 	<body aria-label="">
 		<div class="grow p-5 text-center">

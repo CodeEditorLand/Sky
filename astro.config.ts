@@ -1,11 +1,14 @@
 import type { defineConfig } from "astro/config";
 
+// @ts-expect-error
+export const Development = import.meta.env.DEV;
+
 export default (await import("astro/config")).defineConfig({
 	srcDir: "./Source",
 	publicDir: "./Public",
 	outDir: "./Target",
 	site: "http://localhost",
-	compressHTML: true,
+	compressHTML: !Development,
 	prefetch: true,
 	server: {
 		port: 9999,
@@ -13,7 +16,7 @@ export default (await import("astro/config")).defineConfig({
 	integrations: [
 		(await import("@astrojs/solid-js")).default({
 			// @ts-ignore
-			devtools: import.meta.env.DEV,
+			devtools: Development,
 		}),
 		// @ts-ignore
 		// import.meta.env.MODE === "production"
@@ -33,10 +36,10 @@ export default (await import("astro/config")).defineConfig({
 	},
 	vite: {
 		build: {
-			sourcemap: true,
+			sourcemap: Development,
 		},
 		optimizeDeps: {
-			...(process.env.NODE_ENV === "development"
+			...(Development
 				? {
 						exclude: [
 							"@codeeditorland/common",
@@ -51,7 +54,7 @@ export default (await import("astro/config")).defineConfig({
 			preserveSymlinks: true,
 		},
 		css: {
-			devSourcemap: true,
+			devSourcemap: Development,
 			transformer: "postcss",
 		},
 		plugins: [(await import("vite-plugin-top-level-await")).default()],

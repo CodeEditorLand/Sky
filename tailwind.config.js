@@ -1,9 +1,13 @@
 import { fontFamily } from "tailwindcss/defaultTheme";
 
+const Common = "*.{astro,js,jsx,ts,tsx,vue,svelte,html}";
+
 export default {
 	content: [
-		"./Public/**/*.html",
-		"./Source/**/*.{astro,js,jsx,ts,tsx,vue,svelte}",
+		`./Public/**/${Common}`,
+		`./Source/**/${Common}`,
+		`./node_modules/@codeeditorland/wind/Target/**/${Common}`,
+		`./node_modules/@codeeditorland/vanilla/Target/**/${Common}`,
 	],
 
 	darkMode: "media",

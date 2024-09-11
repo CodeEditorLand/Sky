@@ -1,9 +1,11 @@
 import type { defineConfig } from "astro/config";
 
-export const Tauri = process.env.TAURI;
+export const Tauri = typeof process.env["TAURI_ENV_DEBUG"] !== "undefined";
 
-// @ts-expect-error
-export const Development = import.meta.env.DEV;
+export const Development =
+	process.env["NODE_ENV"] === "development" ||
+	// @ts-expect-error
+	process.env["TAURI_ENV_DEBUG"] === true;
 
 export default (await import("astro/config")).defineConfig({
 	srcDir: "./Source",
@@ -17,7 +19,10 @@ export default (await import("astro/config")).defineConfig({
 			? "http://localhost"
 			: "https://editor.land",
 	compressHTML: !Development,
-	prefetch: true,
+	prefetch: {
+		defaultStrategy: "hover",
+		prefetchAll: true,
+	},
 	server: {
 		port: 9999,
 	},
@@ -27,10 +32,16 @@ export default (await import("astro/config")).defineConfig({
 			devtools: Development,
 		}),
 		Tauri ? null : (await import("@astrojs/sitemap")).default(),
-		(await import("@playform/inline")).default({ Logger: 1 }),
+		Development
+			? null
+			: (await import("@playform/inline")).default({ Logger: 1 }),
 		(await import("@astrojs/prefetch")).default(),
-		(await import("@playform/format")).default({ Logger: 1 }),
-		(await import("@playform/compress")).default({ Logger: 1 }),
+		Development
+			? null
+			: (await import("@playform/format")).default({ Logger: 1 }),
+		Development
+			? null
+			: (await import("@playform/compress")).default({ Logger: 1 }),
 	],
 	experimental: {
 		directRenderScript: true,

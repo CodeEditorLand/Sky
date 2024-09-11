@@ -1,5 +1,7 @@
 import type { defineConfig } from "astro/config";
 
+export const Tauri = process.env.TAURI;
+
 // @ts-expect-error
 export const Development = import.meta.env.DEV;
 
@@ -7,7 +9,13 @@ export default (await import("astro/config")).defineConfig({
 	srcDir: "./Source",
 	publicDir: "./Public",
 	outDir: "./Target",
-	site: "http://localhost",
+	site: Tauri
+		? Development
+			? "tauri://localhost"
+			: "https://tauri.localhost"
+		: Development
+			? "http://localhost"
+			: "https://editor.land",
 	compressHTML: !Development,
 	prefetch: true,
 	server: {
@@ -18,11 +26,7 @@ export default (await import("astro/config")).defineConfig({
 			// @ts-ignore
 			devtools: Development,
 		}),
-		// @ts-ignore
-		// import.meta.env.MODE === "production"
-		// 	? (await import("astrojs-service-worker")).default()
-		// 	: null,
-		(await import("@astrojs/sitemap")).default(),
+		Tauri ? null : (await import("@astrojs/sitemap")).default(),
 		(await import("@playform/inline")).default({ Logger: 1 }),
 		(await import("@astrojs/prefetch")).default(),
 		(await import("@playform/format")).default({ Logger: 1 }),

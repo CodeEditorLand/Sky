@@ -25,6 +25,7 @@ export default (await import("astro/config")).defineConfig({
 	},
 	server: {
 		port: 9999,
+		host: true,
 	},
 	integrations: [
 		(await import("@astrojs/solid-js")).default({
@@ -58,7 +59,6 @@ export default (await import("astro/config")).defineConfig({
 				? {
 						exclude: [
 							"@codeeditorland/common",
-							"@codeeditorland/editor",
 							"@codeeditorland/wind",
 							"@codeeditorland/vanilla",
 						],

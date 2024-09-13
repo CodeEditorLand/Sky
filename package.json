@@ -37,7 +37,6 @@
 		"@codeeditorland/vanilla": "0.0.1",
 		"@playform/build": "0.1.6",
 		"@playform/compress": "0.1.1",
-		"@playform/format": "0.0.7",
 		"@playform/inline": "0.1.0",
 		"@swup/body-class-plugin": "3.2.0",
 		"@swup/fade-theme": "2.0.1",

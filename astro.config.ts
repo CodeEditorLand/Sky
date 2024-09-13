@@ -1,6 +1,6 @@
 import type { defineConfig } from "astro/config";
 
-export const Tauri = typeof process.env["TAURI_ENV_DEBUG"] !== "undefined";
+export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
 
 export const Development =
 	process.env["NODE_ENV"] === "development" ||
@@ -35,9 +35,6 @@ export default (await import("astro/config")).defineConfig({
 			? null
 			: (await import("@playform/inline")).default({ Logger: 1 }),
 		(await import("@astrojs/prefetch")).default(),
-		Development
-			? null
-			: (await import("@playform/format")).default({ Logger: 1 }),
 		Development
 			? null
 			: (await import("@playform/compress")).default({ Logger: 1 }),

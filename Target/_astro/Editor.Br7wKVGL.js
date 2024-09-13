@@ -16,4 +16,3 @@ body {
  */
 export default () => ({});
 `;default:return""}},Pe=({Content:e,Field:t},n)=>{n&&n.preventDefault()};oe(["click"]);export{Me as Return,Pe as Update,$e as default};
-//# sourceMappingURL=Editor.Br7wKVGL.js.map

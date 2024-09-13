@@ -4,8 +4,7 @@ export const Tauri = typeof process.env["TAURI_ENV_DEBUG"] !== "undefined";
 
 export const Development =
 	process.env["NODE_ENV"] === "development" ||
-	// @ts-expect-error
-	process.env["TAURI_ENV_DEBUG"] === true;
+	process.env["TAURI_ENV_DEBUG"] === "true";
 
 export default (await import("astro/config")).defineConfig({
 	srcDir: "./Source",

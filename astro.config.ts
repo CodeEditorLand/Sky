@@ -1,4 +1,5 @@
 import type { defineConfig } from "astro/config";
+import type { ViteDevServer } from "vite";
 
 export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
 
@@ -48,6 +49,7 @@ export default (await import("astro/config")).defineConfig({
 	vite: {
 		build: {
 			sourcemap: Development,
+			manifest: true,
 		},
 		optimizeDeps: {
 			...(Development
@@ -67,6 +69,26 @@ export default (await import("astro/config")).defineConfig({
 			devSourcemap: Development,
 			transformer: "postcss",
 		},
-		plugins: [(await import("vite-plugin-top-level-await")).default()],
+		plugins: [
+			(await import("vite-plugin-top-level-await")).default(),
+			((Module: string[]) => ({
+				name: "NodeModules",
+				configureServer: (server: ViteDevServer): void => {
+					server.watcher.options = {
+						...server.watcher.options,
+						ignored: [
+							new RegExp(
+								`/node_modules\\/(?!${Module.join("|")}).*/`,
+							),
+							"**/.git/**",
+						],
+					};
+				},
+			}))([
+				"@codeeditorland/common",
+				"@codeeditorland/wind",
+				"@codeeditorland/vanilla",
+			]),
+		],
 	},
 }) as typeof defineConfig;

@@ -1,0 +1,1 @@
+{"version":3,"file":"Base.astro_astro_type_script_index_0_lang.C1wtB7vu.js","sources":["../../Source/Function/API.ts"],"sourcesContent":["window.__TAURI_ISOLATION_HOOK__ = (Request: any) => Request;\n"],"names":["Request"],"mappings":"AAAA,OAAO,yBAA4BA,GAAiBA"}

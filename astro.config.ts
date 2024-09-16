@@ -3,7 +3,7 @@ import type { ViteDevServer } from "vite";
 
 export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
 
-export const Development =
+export const On =
 	process.env["NODE_ENV"] === "development" ||
 	process.env["TAURI_ENV_DEBUG"] === "true";
 
@@ -12,13 +12,13 @@ export default (await import("astro/config")).defineConfig({
 	publicDir: "./Public",
 	outDir: "./Target",
 	site: Tauri
-		? Development
+		? On
 			? "tauri://localhost"
 			: "https://tauri.localhost"
-		: Development
+		: On
 			? "http://localhost"
 			: "https://editor.land",
-	compressHTML: !Development,
+	compressHTML: !On,
 	prefetch: {
 		defaultStrategy: "hover",
 		prefetchAll: true,
@@ -29,16 +29,12 @@ export default (await import("astro/config")).defineConfig({
 	integrations: [
 		(await import("@astrojs/solid-js")).default({
 			// @ts-ignore
-			devtools: Development,
+			devtools: On,
 		}),
 		Tauri ? null : (await import("@astrojs/sitemap")).default(),
-		Development
-			? null
-			: (await import("@playform/inline")).default({ Logger: 1 }),
+		On ? null : (await import("@playform/inline")).default({ Logger: 1 }),
 		(await import("@astrojs/prefetch")).default(),
-		Development
-			? null
-			: (await import("@playform/compress")).default({ Logger: 1 }),
+		On ? null : (await import("@playform/compress")).default({ Logger: 1 }),
 	],
 	experimental: {
 		directRenderScript: true,
@@ -48,11 +44,22 @@ export default (await import("astro/config")).defineConfig({
 	},
 	vite: {
 		build: {
-			sourcemap: Development,
+			sourcemap: On,
 			manifest: true,
+			minify: !On,
+			cssMinify: !On,
+			// terserOptions: Development ? {
+			// 	compress: false,
+			// 	ecma: 2020,
+			// 	enclose: false,
+			// 	format: {
+			// 		ascii_only: false,
+			// 		braces
+			// 	}
+			// } : {}
 		},
 		optimizeDeps: {
-			...(Development
+			...(On
 				? {
 						exclude: [
 							"@codeeditorland/common",
@@ -66,7 +73,7 @@ export default (await import("astro/config")).defineConfig({
 			preserveSymlinks: true,
 		},
 		css: {
-			devSourcemap: Development,
+			devSourcemap: On,
 			transformer: "postcss",
 		},
 		plugins: [

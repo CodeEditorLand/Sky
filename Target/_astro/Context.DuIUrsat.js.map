@@ -1,0 +1,1 @@
+{"version":3,"mappings":";;AAAK,SAAI,SAAM","names":[],"ignoreList":[0],"sources":["../../node_modules/@codeeditorland/wind/Target/Context/Action/Context.js"],"sourcesContent":["const t=(await import(\"solid-js\")).createContext();var o=(await import(\"solid-js\")).useContext(t);export{t as _Function,o as default};\n"],"file":"_astro/Context.DuIUrsat.js"}

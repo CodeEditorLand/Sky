@@ -7,7 +7,7 @@ export default {
 		`./Public/**/${Common}`,
 		`./Source/**/${Common}`,
 		`./node_modules/@codeeditorland/wind/Target/**/${Common}`,
-		`./node_modules/@codeeditorland/vanilla/Target/**/${Common}`,
+		`./node_modules/@codeeditorland/ecosystem/Target/**/${Common}`,
 	],
 
 	darkMode: "media",

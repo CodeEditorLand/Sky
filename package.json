@@ -32,7 +32,7 @@
 		"@astrojs/sitemap": "3.1.6",
 		"@astrojs/solid-js": "4.4.2",
 		"@codeeditorland/common": "0.0.6",
-		"@codeeditorland/vanilla": "0.0.1",
+		"@codeeditorland/ecosystem": "0.0.1",
 		"@codeeditorland/wind": "0.0.1",
 		"@playform/build": "0.1.7",
 		"@playform/compress": "0.1.1",
@@ -63,11 +63,11 @@
 		"vite-plugin-top-level-await": "1.4.4",
 		"zod": "3.23.8"
 	},
+	"devDependencies": {
+		"@astrojs/ts-plugin": "1.10.2"
+	},
 	"publishConfig": {
 		"access": "restricted",
 		"provenance": true
-	},
-	"devDependencies": {
-		"@astrojs/ts-plugin": "1.10.2"
 	}
 }

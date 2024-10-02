@@ -608,7 +608,7 @@
     ]
   },
   "Source/pages/VSCode.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/VSCode.astro_astro_type_script_index_0_lang.ChNq7z1Y.js",
+    "file": "_astro/VSCode.astro_astro_type_script_index_0_lang.1Li0DjX4.js",
     "name": "VSCode.astro_astro_type_script_index_0_lang",
     "src": "Source/pages/VSCode.astro?astro&type=script&index=0&lang.ts",
     "isEntry": true,
@@ -621,7 +621,7 @@
       "__vite-browser-external"
     ],
     "css": [
-      "_astro/VSCode.QJ48Jfyu.css"
+      "_astro/VSCode.BgYAsl5q.css"
     ]
   },
   "__vite-browser-external": {
@@ -753,7 +753,7 @@
     "isDynamicEntry": true
   },
   "astro-entry:@codeeditorland/wind/Target/Element/Page/Editor.js": {
-    "file": "_astro/Editor.D3EftafX.js",
+    "file": "_astro/Editor.Chwie00I.js",
     "name": "Editor",
     "src": "astro-entry:@codeeditorland/wind/Target/Element/Page/Editor.js",
     "isEntry": true,
@@ -806,7 +806,7 @@
     ]
   },
   "node_modules/@codeeditorland/wind/Target/Element/Editor.js": {
-    "file": "_astro/Editor.-QhLGCEP.js",
+    "file": "_astro/Editor.DysDyDST.js",
     "name": "Editor",
     "src": "node_modules/@codeeditorland/wind/Target/Element/Editor.js",
     "isDynamicEntry": true,
@@ -816,7 +816,7 @@
       "_preload-helper.CLcXU_4U.js"
     ],
     "css": [
-      "_astro/Editor.CqhmHK5S.css"
+      "_astro/Editor.DsfLfh7v.css"
     ]
   },
   "node_modules/@codeeditorland/wind/Target/Script/Monaco/Theme/Active4D.json": {

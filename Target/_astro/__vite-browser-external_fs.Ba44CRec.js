@@ -1,0 +1,1 @@
+const o=new Proxy({},{get(e,o){throw new Error(`Module "fs" has been externalized for browser compatibility. Cannot access "fs.${o}" in client code.  See https://vitejs.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.`)}});export{o as default};

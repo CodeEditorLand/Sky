@@ -1,11 +1,11 @@
 {
   "../../node_modules/@astrojs/solid-js/dist/client.js": {
-    "file": "_astro/client.CWB44mtP.js",
+    "file": "_astro/client.CVfdNxYM.js",
     "name": "client",
     "src": "../../node_modules/@astrojs/solid-js/dist/client.js",
     "isEntry": true,
     "imports": [
-      "_web.DNswYvNQ.js"
+      "_dev.BKQXez9C.js"
     ]
   },
   "../../node_modules/monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.ttf": {
@@ -608,7 +608,7 @@
     ]
   },
   "Source/pages/VSCode.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/VSCode.astro_astro_type_script_index_0_lang.CMX0Wvg8.js",
+    "file": "_astro/VSCode.astro_astro_type_script_index_0_lang.DBV8giB-.js",
     "name": "VSCode.astro_astro_type_script_index_0_lang",
     "src": "Source/pages/VSCode.astro?astro&type=script&index=0&lang.ts",
     "isEntry": true,
@@ -616,18 +616,35 @@
       "_preload-helper.CLcXU_4U.js"
     ],
     "dynamicImports": [
-      "__vite-browser-external",
-      "__vite-browser-external",
-      "__vite-browser-external"
+      "__vite-browser-external:fs",
+      "__vite-browser-external:vm",
+      "__vite-browser-external:module"
     ],
     "css": [
       "_astro/VSCode.B-6FwGi3.css"
     ]
   },
-  "__vite-browser-external": {
-    "file": "_astro/__vite-browser-external.BIHI7g3E.js",
-    "name": "__vite-browser-external",
-    "src": "__vite-browser-external",
+  "__vite-browser-external:fs": {
+    "file": "_astro/__vite-browser-external_fs.Ba44CRec.js",
+    "name": "__vite-browser-external_fs",
+    "src": "__vite-browser-external:fs",
+    "isDynamicEntry": true
+  },
+  "__vite-browser-external:module": {
+    "file": "_astro/__vite-browser-external_module.DodM2TUx.js",
+    "name": "__vite-browser-external_module",
+    "src": "__vite-browser-external:module",
+    "isDynamicEntry": true
+  },
+  "__vite-browser-external:vm": {
+    "file": "_astro/__vite-browser-external_vm.DiZYyJGZ.js",
+    "name": "__vite-browser-external_vm",
+    "src": "__vite-browser-external:vm",
+    "isDynamicEntry": true
+  },
+  "_dev.BKQXez9C.js": {
+    "file": "_astro/dev.BKQXez9C.js",
+    "name": "dev",
     "isDynamicEntry": true
   },
   "_editor.main.!~{00e}~.js": {
@@ -747,19 +764,14 @@
     "file": "_astro/preload-helper.CLcXU_4U.js",
     "name": "preload-helper"
   },
-  "_web.DNswYvNQ.js": {
-    "file": "_astro/web.DNswYvNQ.js",
-    "name": "web",
-    "isDynamicEntry": true
-  },
   "astro-entry:@codeeditorland/wind/Target/Element/Page/Editor.js": {
-    "file": "_astro/Editor.Chwie00I.js",
+    "file": "_astro/Editor.ddq5MFoN.js",
     "name": "Editor",
     "src": "astro-entry:@codeeditorland/wind/Target/Element/Page/Editor.js",
     "isEntry": true,
     "imports": [
       "_preload-helper.CLcXU_4U.js",
-      "_web.DNswYvNQ.js"
+      "_dev.BKQXez9C.js"
     ],
     "dynamicImports": [
       "node_modules/@codeeditorland/wind/Target/Context/Action.js",
@@ -767,19 +779,19 @@
     ]
   },
   "astro:scripts/page.js": {
-    "file": "_astro/page.D_6XVOew.js",
+    "file": "_astro/page.D6DPWAgS.js",
     "name": "page",
     "src": "astro:scripts/page.js",
     "isEntry": true
   },
   "node_modules/@codeeditorland/wind/Target/Context/Action.js": {
-    "file": "_astro/Action.Dp4VngJx.js",
+    "file": "_astro/Action.ds2H9qbO.js",
     "name": "Action",
     "src": "node_modules/@codeeditorland/wind/Target/Context/Action.js",
     "isDynamicEntry": true,
     "imports": [
       "_preload-helper.CLcXU_4U.js",
-      "_web.DNswYvNQ.js"
+      "_dev.BKQXez9C.js"
     ],
     "dynamicImports": [
       "../../node_modules/monaco-editor/esm/vs/language/css/css.worker.js?worker",
@@ -793,7 +805,7 @@
     ]
   },
   "node_modules/@codeeditorland/wind/Target/Context/Action/Context.js": {
-    "file": "_astro/Context.BU2TJI7G.js",
+    "file": "_astro/Context.QPk0-PoL.js",
     "name": "Context",
     "src": "node_modules/@codeeditorland/wind/Target/Context/Action/Context.js",
     "isDynamicEntry": true,
@@ -801,17 +813,17 @@
       "_preload-helper.CLcXU_4U.js"
     ],
     "dynamicImports": [
-      "_web.DNswYvNQ.js",
-      "_web.DNswYvNQ.js"
+      "_dev.BKQXez9C.js",
+      "_dev.BKQXez9C.js"
     ]
   },
   "node_modules/@codeeditorland/wind/Target/Element/Editor.js": {
-    "file": "_astro/Editor.DysDyDST.js",
+    "file": "_astro/Editor.PHKF6GwT.js",
     "name": "Editor",
     "src": "node_modules/@codeeditorland/wind/Target/Element/Editor.js",
     "isDynamicEntry": true,
     "imports": [
-      "_web.DNswYvNQ.js",
+      "_dev.BKQXez9C.js",
       "_editor.main.CKfTQ7Z-.js",
       "_preload-helper.CLcXU_4U.js"
     ],

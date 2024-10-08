@@ -64,7 +64,7 @@ export default (await import("astro/config")).defineConfig({
 						exclude: [
 							"@codeeditorland/common",
 							"@codeeditorland/wind",
-							"@codeeditorland/ecosystem",
+							"@codeeditorland/output",
 						],
 					}
 				: {}),
@@ -94,7 +94,7 @@ export default (await import("astro/config")).defineConfig({
 			}))([
 				"@codeeditorland/common",
 				"@codeeditorland/wind",
-				"@codeeditorland/ecosystem",
+				"@codeeditorland/output",
 			]),
 		],
 	},

@@ -26,6 +26,9 @@ export default (await import("astro/config")).defineConfig({
 	server: {
 		port: 9999,
 	},
+	build: {
+		concurrency: 9999
+	},
 	integrations: [
 		(await import("@astrojs/solid-js")).default({
 			// @ts-ignore

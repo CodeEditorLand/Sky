@@ -40,11 +40,7 @@
 		"@tailwindcss/aspect-ratio": "0.4.2",
 		"@tailwindcss/forms": "0.5.9",
 		"@tailwindcss/typography": "0.5.15",
-<<<<<<< HEAD
 		"astro": "5.0.0-beta.4",
-=======
-		"astro": "4.16.1",
->>>>>>> 7f78dc807a66046d82837d39eedf07dca505acde
 		"astro-capo": "0.0.1",
 		"autoprefixer": "10.4.20",
 		"cssnano": "7.0.6",

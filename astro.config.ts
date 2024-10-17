@@ -40,10 +40,8 @@ export default (await import("astro/config")).defineConfig({
 		On ? null : (await import("@playform/compress")).default({ Logger: 1 }),
 	],
 	experimental: {
-		directRenderScript: true,
 		clientPrerender: true,
-		globalRoutePriority: true,
-		serverIslands: true,
+		contentIntellisense: true,
 	},
 	vite: {
 		build: {

@@ -129,4 +129,4 @@ export default (await import("astro/config")).defineConfig({
 			]),
 		],
 	},
-}) as typeof defineConfig;
+}) as defineConfig;

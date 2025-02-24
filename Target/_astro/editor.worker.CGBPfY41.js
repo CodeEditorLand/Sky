@@ -1,1 +1,0 @@
-function r(r){return new Worker("/_astro/editor.worker-CIbrcwy0.js",{name:r?.name})}export{r as default};

@@ -1220,7 +1220,7 @@ function renderServerIsland(result, _displayName, props, slots) {
           `<link rel="preload" as="fetch" href="${serverIslandUrl}" crossorigin="anonymous">`
         );
       }
-      destination.write(`<script async type="module" data-island-id="${hostId}">
+      destination.write(`<script async type="module" data-astro-rerun data-island-id="${hostId}">
 let script = document.querySelector('script[data-island-id="${hostId}"]');
 
 ${useGETRequest ? (
@@ -1243,11 +1243,11 @@ let response = await fetch('${serverIslandUrl}', {
       )}
 if (script) {
 	if(
-		response.status === 200 
-		&& response.headers.has('content-type') 
+		response.status === 200
+		&& response.headers.has('content-type')
 		&& response.headers.get('content-type').split(";")[0].trim() === 'text/html') {
 		let html = await response.text();
-	
+
 		// Swap!
 		while(script.previousSibling &&
 			script.previousSibling.nodeType !== 8 &&
@@ -1255,11 +1255,11 @@ if (script) {
 			script.previousSibling.remove();
 		}
 		script.previousSibling?.remove();
-	
+
 		let frag = document.createRange().createContextualFragment(html);
 		script.before(frag);
 	}
-	script.remove();
+	script.remove(); // Prior to v5.4.2, this was the trick to force rerun of scripts.  Keeping it to minimize change to the existing behavior.
 }
 </script>`);
     }

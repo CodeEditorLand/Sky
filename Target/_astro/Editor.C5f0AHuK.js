@@ -1,6 +1,6 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["_astro/Action.DJtM4Nrg.js","_astro/preload-helper.BelkbqnE.js","_astro/Editor.CAOQyrFx.js","_astro/editor.main.D3nO2WnT.js","_astro/editor.vvD9CArE.css","_astro/Editor.BXsEeXJ4.css"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["_astro/Action.Cc_Q8jtS.js","_astro/preload-helper.BelkbqnE.js","_astro/Editor.Ba3oRx9O.js","_astro/editor.main.D3nO2WnT.js","_astro/editor.vvD9CArE.css","_astro/Editor.BXsEeXJ4.css"])))=>i.map(i=>d[i]);
 import { _ as __vitePreload } from './preload-helper.BelkbqnE.js';
-let createSignal, batch, createComponent, createEffect, createMemo, use, getNextElement, spread, onMount, insert, delegateEvents, on, mergeProps, solid, onCleanup, runHydrationEvents, splitProps, template, untrack, w;
+let Editor_default, createSignal, batch, createComponent, createEffect, createMemo, use, getNextElement, spread, onMount, insert, delegateEvents, on, mergeProps, dev, onCleanup, runHydrationEvents, splitProps, template, untrack;
 let __tla = (async ()=>{
     const sharedConfig = {
         context: undefined,
@@ -21,22 +21,18 @@ let __tla = (async ()=>{
     function setHydrateContext(context) {
         sharedConfig.context = context;
     }
-    const IS_DEV = false;
+    const IS_DEV = true;
     const equalFn = (a, b)=>a === b;
     const $PROXY = Symbol("solid-proxy");
     const SUPPORTS_PROXY = typeof Proxy === "function";
+    const $DEVCOMP = Symbol("solid-dev-component");
     const signalOptions = {
         equals: equalFn
     };
     let runEffects = runQueue;
     const STALE = 1;
     const PENDING = 2;
-    const UNOWNED = {
-        owned: null,
-        cleanups: null,
-        context: null,
-        owner: null
-    };
+    const UNOWNED = {};
     const NO_INIT = {};
     var Owner = null;
     let Transition = null;
@@ -46,12 +42,19 @@ let __tla = (async ()=>{
     let Effects = null;
     let ExecCount = 0;
     function createRoot(fn, detachedOwner) {
-        const listener = Listener, owner = Owner, unowned = fn.length === 0, current = detachedOwner === undefined ? owner : detachedOwner, root = unowned ? UNOWNED : {
+        const listener = Listener, owner = Owner, unowned = fn.length === 0, current = detachedOwner === undefined ? owner : detachedOwner, root = unowned ? {
+            owned: null,
+            cleanups: null,
+            context: null,
+            owner: null
+        } : {
             owned: null,
             cleanups: null,
             context: current ? current.context : null,
             owner: current
-        }, updateFn = unowned ? fn : ()=>fn(()=>untrack(()=>cleanNode(root)));
+        }, updateFn = unowned ? ()=>fn(()=>{
+                throw new Error("Dispose method must be an explicit argument to createRoot function");
+            }) : ()=>fn(()=>untrack(()=>cleanNode(root)));
         Owner = root;
         Listener = null;
         try {
@@ -69,6 +72,14 @@ let __tla = (async ()=>{
             observerSlots: null,
             comparator: options.equals || undefined
         };
+        {
+            if (options.name) s.name = options.name;
+            if (options.internal) {
+                s.internal = true;
+            } else {
+                registerGraph(s);
+            }
+        }
         const setter = (value)=>{
             if (typeof value === "function") {
                 value = value(s.value);
@@ -81,23 +92,23 @@ let __tla = (async ()=>{
         ];
     };
     function createComputed(fn, value, options) {
-        const c = createComputation(fn, value, true, STALE);
+        const c = createComputation(fn, value, true, STALE, options);
         updateComputation(c);
     }
     function createRenderEffect(fn, value, options) {
-        const c = createComputation(fn, value, false, STALE);
+        const c = createComputation(fn, value, false, STALE, options);
         updateComputation(c);
     }
     createEffect = function(fn, value, options) {
         runEffects = runUserEffects;
-        const c = createComputation(fn, value, false, STALE), s = SuspenseContext && useContext(SuspenseContext);
+        const c = createComputation(fn, value, false, STALE, options), s = SuspenseContext && useContext(SuspenseContext);
         if (s) c.suspense = s;
         c.user = true;
         Effects ? Effects.push(c) : updateComputation(c);
     };
     createMemo = function(fn, value, options) {
         options = options ? Object.assign({}, signalOptions, options) : signalOptions;
-        const c = createComputation(fn, value, true, 0);
+        const c = createComputation(fn, value, true, 0, options);
         c.observers = null;
         c.observerSlots = null;
         c.comparator = options.equals || undefined;
@@ -257,7 +268,7 @@ let __tla = (async ()=>{
         createEffect(()=>untrack(fn));
     };
     onCleanup = function(fn) {
-        if (Owner === null) ;
+        if (Owner === null) console.warn("cleanups created outside a `createRoot` or `render` will never be run");
         else if (Owner.cleanups === null) Owner.cleanups = [
             fn
         ];
@@ -272,11 +283,35 @@ let __tla = (async ()=>{
         Effects.push.apply(Effects, e);
         e.length = 0;
     }
+    function devComponent(Comp, props) {
+        const c = createComputation(()=>untrack(()=>{
+                Object.assign(Comp, {
+                    [$DEVCOMP]: true
+                });
+                return Comp(props);
+            }), undefined, true, 0);
+        c.props = props;
+        c.observers = null;
+        c.observerSlots = null;
+        c.name = Comp.name;
+        c.component = Comp;
+        updateComputation(c);
+        return c.tValue !== undefined ? c.tValue : c.value;
+    }
+    function registerGraph(value) {
+        if (Owner) {
+            if (Owner.sourceMap) Owner.sourceMap.push(value);
+            else Owner.sourceMap = [
+                value
+            ];
+            value.graph = Owner;
+        }
+    }
     function createContext(defaultValue, options) {
         const id = Symbol("context");
         return {
             id,
-            Provider: createProvider(id),
+            Provider: createProvider(id, options),
             defaultValue
         };
     }
@@ -286,7 +321,9 @@ let __tla = (async ()=>{
     }
     function children(fn) {
         const children = createMemo(fn);
-        const memo = createMemo(()=>resolveChildren(children()));
+        const memo = createMemo(()=>resolveChildren(children()), undefined, {
+            name: "children"
+        });
         memo.toArray = ()=>{
             const c = memo();
             return Array.isArray(c) ? c : c != null ? [
@@ -355,7 +392,7 @@ let __tla = (async ()=>{
                     }
                     if (Updates.length > 10e5) {
                         Updates = [];
-                        if (IS_DEV) ;
+                        if (IS_DEV) throw new Error("Potential Infinite Loop Detected.");
                         throw new Error();
                     }
                 }, false);
@@ -410,7 +447,7 @@ let __tla = (async ()=>{
             context: Owner ? Owner.context : null,
             pure
         };
-        if (Owner === null) ;
+        if (Owner === null) console.warn("computations created outside a `createRoot` or `render` will never be disposed");
         else if (Owner !== UNOWNED) {
             {
                 if (!Owner.owned) Owner.owned = [
@@ -419,6 +456,7 @@ let __tla = (async ()=>{
                 else Owner.owned.push(c);
             }
         }
+        if (options && options.name) c.name = options.name;
         return c;
     }
     function runTop(node) {
@@ -549,6 +587,7 @@ let __tla = (async ()=>{
             node.cleanups = null;
         }
         node.state = 0;
+        delete node.sourceMap;
     }
     function castError(err) {
         if (err instanceof Error) return err;
@@ -581,12 +620,12 @@ let __tla = (async ()=>{
                         [id]: props.value
                     };
                     return children(()=>props.children);
-                })), undefined);
+                })), undefined, options);
             return res;
         };
     }
     createComponent = function(Comp, props) {
-        return untrack(()=>Comp(props || {}));
+        return devComponent(Comp, props || {});
     };
     function trueFn() {
         return true;
@@ -766,7 +805,9 @@ let __tla = (async ()=>{
             }
             let Comp;
             return createMemo(()=>(Comp = comp()) ? untrack(()=>{
-                    if (IS_DEV) ;
+                    if (IS_DEV) Object.assign(Comp, {
+                        [$DEVCOMP]: true
+                    });
                     if (!ctx || sharedConfig.done) return Comp(props);
                     const c = sharedConfig.context;
                     setHydrateContext(ctx);
@@ -859,8 +900,13 @@ let __tla = (async ()=>{
             }
         });
     }
-    solid = Object.freeze(Object.defineProperty({
+    if (globalThis) {
+        if (!globalThis.Solid$$) globalThis.Solid$$ = true;
+        else console.warn("You appear to have multiple instances of Solid. This can lead to unexpected behavior.");
+    }
+    dev = Object.freeze(Object.defineProperty({
         __proto__: null,
+        $DEVCOMP,
         $PROXY,
         Suspense,
         batch,
@@ -1040,6 +1086,7 @@ let __tla = (async ()=>{
     template = function(html, isImportNode, isSVG, isMathML) {
         let node;
         const create = ()=>{
+            if (isHydrating()) throw new Error("Failed attempt to create new DOM elements during hydration. Check that the libraries you are using support hydration.");
             const t = document.createElement("template");
             t.innerHTML = html;
             return t.content.firstChild;
@@ -1157,6 +1204,10 @@ let __tla = (async ()=>{
     getNextElement = function(template) {
         let node, key, hydrating = isHydrating();
         if (!hydrating || !(node = sharedConfig.registry.get((key = getHydrationKey())))) {
+            if (hydrating) {
+                sharedConfig.done = true;
+                throw new Error(`Hydration Mismatch. Unable to find DOM nodes for hydration key: ${key}\n${template ? template().outerHTML : ""}`);
+            }
             return template();
         }
         if (sharedConfig.completed) sharedConfig.completed.add(node);
@@ -1376,7 +1427,7 @@ let __tla = (async ()=>{
                 parent.appendChild(value);
             } else parent.replaceChild(value, parent.firstChild);
             current = value;
-        } else ;
+        } else console.warn(`Unrecognized value. Skipped inserting`, value);
         return current;
     }
     function normalizeIncomingArray(normalized, array, current, unwrap) {
@@ -1432,49 +1483,59 @@ let __tla = (async ()=>{
     function getHydrationKey() {
         return sharedConfig.getNextContextId();
     }
-    var i = template("<div class=p-5>"), _ = template('<div class="flex flex-col"><main class="flex grow justify-center"><div class="flex grow self-center"><div class=container><div class="grid min-h-screen content-start gap-7 py-9"><div class="mb-28 grid w-full grow grid-flow-row gap-12 lg:grid-flow-col lg:grid-cols-2 lg:gap-10"><div class="order-last lg:order-first">');
-    const $ = lazy(()=>__vitePreload(()=>import('./Action.DJtM4Nrg.js').then(async (m)=>{
+    var __defProp = Object.defineProperty;
+    var __name = (target, value)=>__defProp(target, "name", {
+            value,
+            configurable: true
+        });
+    var _tmpl$ = template(`<div class=p-5>`), _tmpl$2 = template(`<div class="flex flex-col"><main class="flex grow justify-center"><div class="flex grow self-center"><div class=container><div class="grid min-h-screen content-start gap-7 py-9"><div class="mb-28 grid w-full grow grid-flow-row gap-12 lg:grid-flow-col lg:grid-cols-2 lg:gap-10"><div class="order-last lg:order-first">`);
+    const Action = lazy(()=>__vitePreload(()=>import('./Action.Cc_Q8jtS.js').then(async (m)=>{
                 await m.__tla;
                 return m;
-            }), true ? __vite__mapDeps([0,1]) : void 0)), s = lazy(()=>__vitePreload(()=>import('./Editor.CAOQyrFx.js'), true ? __vite__mapDeps([2,3,1,4,5]) : void 0));
-    w = ()=>createComponent(Suspense, {
+            }), true ? __vite__mapDeps([0,1]) : void 0));
+    const Editor = lazy(()=>__vitePreload(()=>import('./Editor.Ba3oRx9O.js'), true ? __vite__mapDeps([2,3,1,4,5]) : void 0));
+    Editor_default = __name(()=>createComponent(Suspense, {
             get children () {
-                var o = _(), c = o.firstChild, d = c.firstChild, p = d.firstChild, f = p.firstChild, g = f.firstChild, m = g.firstChild;
-                return insert(m, createComponent(Suspense, {
+                var _el$ = _tmpl$2(), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$3.firstChild, _el$5 = _el$4.firstChild, _el$6 = _el$5.firstChild, _el$7 = _el$6.firstChild;
+                insert(_el$7, createComponent(Suspense, {
                     get children () {
-                        return createComponent($, {
+                        return createComponent(Action, {
                             get children () {
                                 return [
                                     createComponent(Suspense, {
                                         get children () {
-                                            var e = i();
-                                            return insert(e, createComponent(s, {
+                                            var _el$8 = _tmpl$();
+                                            insert(_el$8, createComponent(Editor, {
                                                 Type: "HTML"
-                                            })), e;
+                                            }));
+                                            return _el$8;
                                         }
                                     }),
                                     createComponent(Suspense, {
                                         get children () {
-                                            var e = i();
-                                            return insert(e, createComponent(s, {
+                                            var _el$9 = _tmpl$();
+                                            insert(_el$9, createComponent(Editor, {
                                                 Type: "CSS"
-                                            })), e;
+                                            }));
+                                            return _el$9;
                                         }
                                     }),
                                     createComponent(Suspense, {
                                         get children () {
-                                            var e = i();
-                                            return insert(e, createComponent(s, {
+                                            var _el$10 = _tmpl$();
+                                            insert(_el$10, createComponent(Editor, {
                                                 Type: "TypeScript"
-                                            })), e;
+                                            }));
+                                            return _el$10;
                                         }
                                     })
                                 ];
                             }
                         });
                     }
-                })), o;
+                }));
+                return _el$;
             }
-        });
+        }), "default");
 })();
-export { createSignal as a, batch as b, createComponent as c, createEffect as d, createMemo as e, use as f, getNextElement as g, spread as h, onMount as i, insert as j, delegateEvents as k, on as l, mergeProps as m, solid as n, onCleanup as o, runHydrationEvents as r, splitProps as s, template as t, untrack as u, w, __tla };
+export { Editor_default as E, createSignal as a, batch as b, createComponent as c, createEffect as d, createMemo as e, use as f, getNextElement as g, spread as h, onMount as i, insert as j, delegateEvents as k, on as l, mergeProps as m, dev as n, onCleanup as o, runHydrationEvents as r, splitProps as s, template as t, untrack as u, __tla };

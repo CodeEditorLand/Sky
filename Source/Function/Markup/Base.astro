@@ -1,16 +1,27 @@
 ---
-import { Head } from "astro-capo";
-
 import "@Function/Stylesheet/Inner.css";
 
 import Meta from "@Function/Meta.astro";
+import { Head } from "astro-capo";
+import { ClientRouter } from "astro:transitions";
 ---
 
 <!doctype html>
 <html lang="en" class="no-js" dir="ltr">
 	<Head>
+		<script>
+			document.documentElement.classList.remove("no-js");
+			document.documentElement.classList.add("js");
+		</script>
+
 		<Meta />
 
+		<link
+			rel="preconnect"
+			href="HTTPS://fonts.googleapis.com"
+			crossorigin
+		/>
+		<link rel="preconnect" href="HTTPS://fonts.gstatic.com" crossorigin />
 		<link
 			rel="manifest"
 			href="/site.webmanifest"
@@ -22,6 +33,8 @@ import Meta from "@Function/Meta.astro";
 		</style>
 
 		<slot name="Head" />
+
+		<ClientRouter />
 	</Head>
 	<body aria-label="">
 		<div class="grow p-5 text-center">

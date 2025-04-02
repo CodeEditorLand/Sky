@@ -1,4 +1,4 @@
-import type { defineConfig } from "astro/config";
+import { defineConfig } from "astro/config";
 import type { ViteDevServer } from "vite";
 
 export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
@@ -7,7 +7,7 @@ export const On =
 	process.env["NODE_ENV"] === "development" ||
 	process.env["TAURI_ENV_DEBUG"] === "true";
 
-export default (await import("astro/config")).defineConfig({
+export default defineConfig({
 	srcDir: "./Source",
 	publicDir: "./Public",
 	outDir: "./Target",
@@ -64,7 +64,7 @@ export default (await import("astro/config")).defineConfig({
 							keep_numbers: true,
 							keep_quoted_props: true,
 							max_line_len: 80,
-							preamble: null,
+							preamble: "",
 							ecma: 5,
 							preserve_annotations: true,
 							quote_keys: false,
@@ -106,9 +106,7 @@ export default (await import("astro/config")).defineConfig({
 			transformer: "postcss",
 		},
 		plugins: [
-			// @ts-expect-error
 			(await import("vite-plugin-top-level-await")).default(),
-			// @ts-expect-error
 			((Module: string[]) => ({
 				name: "NodeModules",
 				configureServer: (server: ViteDevServer): void => {
@@ -129,4 +127,4 @@ export default (await import("astro/config")).defineConfig({
 			]),
 		],
 	},
-}) as defineConfig;
+}) as typeof defineConfig;

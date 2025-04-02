@@ -26,10 +26,11 @@ function nextHydrateContext() {
   };
 }
 
-const IS_DEV = false;
+const IS_DEV = true;
 const equalFn = (a, b) => a === b;
 const $PROXY = Symbol("solid-proxy");
 const $TRACK = Symbol("solid-track");
+const $DEVCOMP = Symbol("solid-dev-component");
 const signalOptions = {
   equals: equalFn
 };
@@ -37,11 +38,7 @@ let runEffects = runQueue;
 const STALE = 1;
 const PENDING = 2;
 const UNOWNED = {
-  owned: null,
-  cleanups: null,
-  context: null,
-  owner: null
-};
+  };
 var Owner = null;
 let Transition = null;
 let ExternalSourceConfig = null;
@@ -49,20 +46,36 @@ let Listener = null;
 let Updates = null;
 let Effects = null;
 let ExecCount = 0;
+const DevHooks = {
+  afterUpdate: null,
+  afterCreateOwner: null,
+  afterCreateSignal: null,
+  afterRegisterGraph: null
+};
 function createRoot(fn, detachedOwner) {
   const listener = Listener,
     owner = Owner,
     unowned = fn.length === 0,
     current = detachedOwner === undefined ? owner : detachedOwner,
     root = unowned
-      ? UNOWNED
+      ? {
+          owned: null,
+          cleanups: null,
+          context: null,
+          owner: null
+        }
       : {
           owned: null,
           cleanups: null,
           context: current ? current.context : null,
           owner: current
         },
-    updateFn = unowned ? fn : () => fn(() => untrack(() => cleanNode(root)));
+    updateFn = unowned
+      ? () =>
+          fn(() => {
+            throw new Error("Dispose method must be an explicit argument to createRoot function");
+          })
+      : () => fn(() => untrack(() => cleanNode(root)));
   Owner = root;
   Listener = null;
   try {
@@ -80,6 +93,14 @@ function createSignal(value, options) {
     observerSlots: null,
     comparator: options.equals || undefined
   };
+  {
+    if (options.name) s.name = options.name;
+    if (options.internal) {
+      s.internal = true;
+    } else {
+      registerGraph(s);
+    }
+  }
   const setter = value => {
     if (typeof value === "function") {
       value = value(s.value);
@@ -89,12 +110,12 @@ function createSignal(value, options) {
   return [readSignal.bind(s), setter];
 }
 function createRenderEffect(fn, value, options) {
-  const c = createComputation(fn, value, false, STALE);
+  const c = createComputation(fn, value, false, STALE, options);
   updateComputation(c);
 }
 function createMemo(fn, value, options) {
   options = options ? Object.assign({}, signalOptions, options) : signalOptions;
-  const c = createComputation(fn, value, true, 0);
+  const c = createComputation(fn, value, true, 0, options);
   c.observers = null;
   c.observerSlots = null;
   c.comparator = options.equals || undefined;
@@ -116,7 +137,8 @@ function untrack(fn) {
   }
 }
 function onCleanup(fn) {
-  if (Owner === null);
+  if (Owner === null)
+    console.warn("cleanups created outside a `createRoot` or `render` will never be run");
   else if (Owner.cleanups === null) Owner.cleanups = [fn];
   else Owner.cleanups.push(fn);
   return fn;
@@ -131,11 +153,39 @@ function resumeEffects(e) {
   Effects.push.apply(Effects, e);
   e.length = 0;
 }
+function devComponent(Comp, props) {
+  const c = createComputation(
+    () =>
+      untrack(() => {
+        Object.assign(Comp, {
+          [$DEVCOMP]: true
+        });
+        return Comp(props);
+      }),
+    undefined,
+    true,
+    0
+  );
+  c.props = props;
+  c.observers = null;
+  c.observerSlots = null;
+  c.name = Comp.name;
+  c.component = Comp;
+  updateComputation(c);
+  return c.tValue !== undefined ? c.tValue : c.value;
+}
+function registerGraph(value) {
+  if (Owner) {
+    if (Owner.sourceMap) Owner.sourceMap.push(value);
+    else Owner.sourceMap = [value];
+    value.graph = Owner;
+  }
+}
 function createContext(defaultValue, options) {
   const id = Symbol("context");
   return {
     id,
-    Provider: createProvider(id),
+    Provider: createProvider(id, options),
     defaultValue
   };
 }
@@ -147,7 +197,9 @@ function useContext(context) {
 }
 function children(fn) {
   const children = createMemo(fn);
-  const memo = createMemo(() => resolveChildren(children()));
+  const memo = createMemo(() => resolveChildren(children()), undefined, {
+    name: "children"
+  });
   memo.toArray = () => {
     const c = memo();
     return Array.isArray(c) ? c : c != null ? [c] : [];
@@ -207,7 +259,7 @@ function writeSignal(node, value, isComp) {
         }
         if (Updates.length > 10e5) {
           Updates = [];
-          if (IS_DEV);
+          if (IS_DEV) throw new Error("Potential Infinite Loop Detected.");
           throw new Error();
         }
       }, false);
@@ -267,13 +319,15 @@ function createComputation(fn, init, pure, state = STALE, options) {
     context: Owner ? Owner.context : null,
     pure
   };
-  if (Owner === null);
+  if (Owner === null)
+    console.warn("computations created outside a `createRoot` or `render` will never be disposed");
   else if (Owner !== UNOWNED) {
     {
       if (!Owner.owned) Owner.owned = [c];
       else Owner.owned.push(c);
     }
   }
+  if (options && options.name) c.name = options.name;
   return c;
 }
 function runTop(node) {
@@ -381,6 +435,7 @@ function cleanNode(node) {
     node.cleanups = null;
   }
   node.state = 0;
+  delete node.sourceMap;
 }
 function castError(err) {
   if (err instanceof Error) return err;
@@ -416,7 +471,8 @@ function createProvider(id, options) {
           };
           return children(() => props.children);
         })),
-      undefined
+      undefined,
+      options
     );
     return res;
   };
@@ -431,12 +487,12 @@ function createComponent(Comp, props) {
     if (sharedConfig.context) {
       const c = sharedConfig.context;
       setHydrateContext(nextHydrateContext());
-      const r = untrack(() => Comp(props || {}));
+      const r = devComponent(Comp, props || {});
       setHydrateContext(c);
       return r;
     }
   }
-  return untrack(() => Comp(props || {}));
+  return devComponent(Comp, props || {});
 }
 const SuspenseListContext = /* #__PURE__ */ createContext();
 function Suspense(props) {
@@ -530,6 +586,19 @@ function Suspense(props) {
       });
     }
   });
+}
+
+const DEV = {
+  hooks: DevHooks,
+  writeSignal,
+  registerGraph
+};
+if (globalThis) {
+  if (!globalThis.Solid$$) globalThis.Solid$$ = true;
+  else
+    console.warn(
+      "You appear to have multiple instances of Solid. This can lead to unexpected behavior."
+    );
 }
 
 const $RAW = Symbol("store-raw"),
@@ -664,9 +733,11 @@ const proxyTraps$1 = {
     return property in target;
   },
   set() {
+    console.warn("Cannot mutate a Store directly");
     return true;
   },
   deleteProperty() {
+    console.warn("Cannot mutate a Store directly");
     return true;
   },
   ownKeys: ownKeys,
@@ -757,7 +828,15 @@ function updatePath(current, path, traversed = []) {
 function createStore(...[store, options]) {
   const unwrappedStore = unwrap(store || {});
   const isArray = Array.isArray(unwrappedStore);
+  if (typeof unwrappedStore !== "object" && typeof unwrappedStore !== "function")
+    throw new Error(
+      `Unexpected type ${typeof unwrappedStore} received when initializing 'createStore'. Expected an object.`
+    );
   const wrappedStore = wrap$1(unwrappedStore);
+  DEV.registerGraph({
+    value: unwrappedStore,
+    name: options && options.name
+  });
   function setStore(...args) {
     batch(() => {
       isArray && args.length === 1
@@ -936,6 +1015,11 @@ function reconcileArrays(parentNode, a, b) {
   }
 }
 function render(code, element, init, options = {}) {
+  if (!element) {
+    throw new Error(
+      "The `element` passed to `render(..., element)` doesn't exist. Make sure `element` exists in the document."
+    );
+  }
   let disposer;
   createRoot(dispose => {
     disposer = dispose;
@@ -1056,7 +1140,7 @@ function insertExpression(parent, value, current, marker, unwrapArray) {
       parent.appendChild(value);
     } else parent.replaceChild(value, parent.firstChild);
     current = value;
-  } else;
+  } else console.warn(`Unrecognized value. Skipped inserting`, value);
   return current;
 }
 function normalizeIncomingArray(normalized, array, current, unwrap) {
@@ -1191,4 +1275,4 @@ var client_default = (element) => (Component, props, slotted, { client }) => {
 };
 
 export { client_default as default };
-//# sourceMappingURL=client.DmoRdeql.js.map
+//# sourceMappingURL=client.p3W15qbG.js.map

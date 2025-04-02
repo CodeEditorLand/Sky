@@ -1,3 +1,4 @@
+const debug = console.debug ;
 const prefetchedUrls = /* @__PURE__ */ new Set();
 const listenedAnchors = /* @__PURE__ */ new WeakSet();
 let prefetchAll = true;
@@ -6,8 +7,9 @@ let inited = false;
 function init(defaultOpts) {
   if (inited) return;
   inited = true;
-  prefetchAll ??= false;
-  defaultStrategy ??= "hover";
+  debug?.(`[astro] Initializing prefetch script`);
+  prefetchAll ??= defaultOpts?.prefetchAll ?? false;
+  defaultStrategy ??= defaultOpts?.defaultStrategy ?? "hover";
   initTapStrategy();
   initHoverStrategy();
   initViewportStrategy();
@@ -119,13 +121,16 @@ function prefetch(url, opts) {
   if (!canPrefetchUrl(url, ignoreSlowConnection)) return;
   prefetchedUrls.add(url);
   if (HTMLScriptElement.supports?.("speculationrules")) {
+    debug?.(`[astro] Prefetching ${url} with <script type="speculationrules">`);
     appendSpeculationRules(url);
   } else if (document.createElement("link").relList?.supports?.("prefetch") && opts?.with !== "fetch") {
+    debug?.(`[astro] Prefetching ${url} with <link rel="prefetch">`);
     const link = document.createElement("link");
     link.rel = "prefetch";
     link.setAttribute("href", url);
     document.head.append(link);
   } else {
+    debug?.(`[astro] Prefetching ${url} with fetch`);
     fetch(url, { priority: "low" });
   }
 }
@@ -197,5 +202,5 @@ function appendSpeculationRules(url) {
   document.head.append(script);
 }
 
-init();
-//# sourceMappingURL=page.BPx5aeii.js.map
+export { init as i };
+//# sourceMappingURL=index.OwVLhNnq.js.map

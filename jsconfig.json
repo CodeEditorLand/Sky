@@ -3,11 +3,23 @@
 	"compilerOptions": {
 		"baseUrl": "./",
 		"emitDeclarationOnly": false,
+		"jsx": "preserve",
+		"jsxFactory": "createComponent",
+		"jsxFragmentFactory": "Fragment",
+		"jsxImportSource": "solid-js",
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"moduleResolution": "Bundler",
 		"noEmit": true,
 		"outDir": "Target",
 		"rootDir": ".",
-		"types": ["astro/client", "astro/env"]
+		"types": ["astro/client", "astro/env"],
+		"plugins": [
+			{
+				"name": "@astrojs/ts-plugin"
+			}
+		]
 	},
 	"extends": "@playform/build/jsconfig",
-	"include": ["Source"]
+	"include": ["Source", ".astro/types.d.ts"],
+	"exclude": ["Target"]
 }

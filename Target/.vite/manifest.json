@@ -11,8 +11,8 @@
       "_astro/VSCode.zCWucDwt.css"
     ]
   },
-  "_Editor.Dq9OhtiX.js": {
-    "file": "_astro/Editor.Dq9OhtiX.js",
+  "_Editor.C5f0AHuK.js": {
+    "file": "_astro/Editor.C5f0AHuK.js",
     "name": "Editor",
     "isDynamicEntry": true,
     "imports": [
@@ -136,40 +136,47 @@
     "file": "_astro/editor.vvD9CArE.css",
     "src": "_editor.vvD9CArE.css"
   },
+  "_index.OwVLhNnq.js": {
+    "file": "_astro/index.OwVLhNnq.js",
+    "name": "index"
+  },
   "_preload-helper.BelkbqnE.js": {
     "file": "_astro/preload-helper.BelkbqnE.js",
     "name": "preload-helper"
   },
   "astro-entry:@codeeditorland/wind/Target/Element/Page/Editor.js": {
-    "file": "_astro/Editor.Chnbldro.js",
+    "file": "_astro/Editor.C4Cf1Pmb.js",
     "name": "Editor",
     "src": "astro-entry:@codeeditorland/wind/Target/Element/Page/Editor.js",
     "isEntry": true,
     "imports": [
-      "_Editor.Dq9OhtiX.js",
+      "_Editor.C5f0AHuK.js",
       "_preload-helper.BelkbqnE.js"
     ]
   },
   "astro:scripts/page.js": {
-    "file": "_astro/page.BPx5aeii.js",
+    "file": "_astro/page.CShjhVs_.js",
     "name": "page",
     "src": "astro:scripts/page.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_index.OwVLhNnq.js"
+    ]
   },
   "node_modules/@astrojs/solid-js/dist/client.js": {
-    "file": "_astro/client.DmoRdeql.js",
+    "file": "_astro/client.p3W15qbG.js",
     "name": "client",
     "src": "node_modules/@astrojs/solid-js/dist/client.js",
     "isEntry": true
   },
   "node_modules/@codeeditorland/wind/Target/Context/Action.js": {
-    "file": "_astro/Action.DJtM4Nrg.js",
+    "file": "_astro/Action.Cc_Q8jtS.js",
     "name": "Action",
     "src": "node_modules/@codeeditorland/wind/Target/Context/Action.js",
     "isDynamicEntry": true,
     "imports": [
       "_preload-helper.BelkbqnE.js",
-      "_Editor.Dq9OhtiX.js"
+      "_Editor.C5f0AHuK.js"
     ],
     "dynamicImports": [
       "node_modules/@codeeditorland/wind/node_modules/monaco-editor/esm/vs/language/css/css.worker.js?worker",
@@ -183,7 +190,7 @@
     ]
   },
   "node_modules/@codeeditorland/wind/Target/Context/Action/Context.js": {
-    "file": "_astro/Context.DUhwN2Y1.js",
+    "file": "_astro/Context.4Uu2myoy.js",
     "name": "Context",
     "src": "node_modules/@codeeditorland/wind/Target/Context/Action/Context.js",
     "isDynamicEntry": true,
@@ -191,17 +198,17 @@
       "_preload-helper.BelkbqnE.js"
     ],
     "dynamicImports": [
-      "_Editor.Dq9OhtiX.js",
-      "_Editor.Dq9OhtiX.js"
+      "_Editor.C5f0AHuK.js",
+      "_Editor.C5f0AHuK.js"
     ]
   },
   "node_modules/@codeeditorland/wind/Target/Element/Editor.js": {
-    "file": "_astro/Editor.CAOQyrFx.js",
+    "file": "_astro/Editor.Ba3oRx9O.js",
     "name": "Editor",
     "src": "node_modules/@codeeditorland/wind/Target/Element/Editor.js",
     "isDynamicEntry": true,
     "imports": [
-      "_Editor.Dq9OhtiX.js",
+      "_Editor.C5f0AHuK.js",
       "_editor.main.D3nO2WnT.js",
       "_preload-helper.BelkbqnE.js"
     ],
@@ -818,6 +825,15 @@
     "imports": [
       "_editor.main.D3nO2WnT.js",
       "_preload-helper.BelkbqnE.js"
+    ]
+  },
+  "node_modules/astro/components/ClientRouter.astro?astro&type=script&index=0&lang.ts": {
+    "file": "_astro/ClientRouter.astro_astro_type_script_index_0_lang.DOU_j2D7.js",
+    "name": "ClientRouter.astro_astro_type_script_index_0_lang",
+    "src": "node_modules/astro/components/ClientRouter.astro?astro&type=script&index=0&lang.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.OwVLhNnq.js"
     ]
   }
 }

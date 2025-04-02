@@ -1,4 +1,4 @@
-import { a as createSignal$1, m as mergeProps, u as untrack, b as batch, d as createEffect, o as onCleanup, e as createMemo, s as splitProps, g as getNextElement, f as use, h as spread, r as runHydrationEvents, t as template, i as onMount, j as insert, c as createComponent, k as delegateEvents, l as on } from './Editor.Dq9OhtiX.js';
+import { a as createSignal$1, m as mergeProps, u as untrack, b as batch, d as createEffect, o as onCleanup, e as createMemo, s as splitProps, g as getNextElement, f as use, h as spread, r as runHydrationEvents, t as template, i as onMount, j as insert, c as createComponent, k as delegateEvents, l as on } from './Editor.C5f0AHuK.js';
 import { e as editor } from './editor.main.D3nO2WnT.js';
 import './preload-helper.BelkbqnE.js';
 
@@ -1027,11 +1027,11 @@ class FormError extends Error {
     }
 }
 
-var _tmpl$ = /* @__PURE__ */ template(`<form novalidate>`);
+var _tmpl$$1 = /* @__PURE__ */ template(`<form novalidate>`);
 function Form(props) {
   const [, options, other] = splitProps(props, ["of"], ["keepResponse", "shouldActive", "shouldTouched", "shouldDirty", "shouldFocus"]);
   return (() => {
-    var _el$ = getNextElement(_tmpl$);
+    var _el$ = getNextElement(_tmpl$$1);
     var _ref$ = props.of.internal.element.set;
     typeof _ref$ === "function" ? use(_ref$, _el$) : props.of.internal.element.set = _el$;
     spread(_el$, mergeProps(other, {
@@ -1098,24 +1098,187 @@ function required(error) {
         : '';
 }
 
-var M=template("<div>"),D=template("<div class=w-full><div class=Editor><code class=Monaco></code><input>"),k=template("<div class=Error><span>&nbsp;&nbsp;&nbsp;"),x=template("<input type=hidden>");var re=({Type:r}={Type:"HTML"})=>{const[a,{Form:i,Field:p}]=createForm(),g=createSignal$1(W(r));let o,e;return onMount(()=>{console.log(o),o instanceof HTMLElement&&(e=editor.create(o,{value:g[0](),language:r.toLowerCase(),automaticLayout:true,lineNumbers:"off","semanticHighlighting.enabled":"configuredByTheme",autoClosingBrackets:"always",autoIndent:"full",tabSize:4,detectIndentation:false,useTabStops:true,minimap:{enabled:false},scrollbar:{useShadows:true,horizontal:"hidden",verticalScrollbarSize:10,verticalSliderSize:4,alwaysConsumeMouseWheel:false},folding:false,theme:window.matchMedia("(prefers-color-scheme: dark)").matches?"Dark":"Light",wrappingStrategy:"advanced",bracketPairColorization:{enabled:true,independentColorPoolPerBracketType:true},padding:{top:12,bottom:12},fixedOverflowWidgets:true,tabCompletion:"on",acceptSuggestionOnEnter:"on",cursorWidth:5,roundedSelection:true,matchBrackets:"always",autoSurround:"languageDefined",screenReaderAnnounceInlineSuggestion:false,renderFinalNewline:"on",selectOnLineNumbers:false,formatOnType:true,formatOnPaste:true,fontFamily:"'Source Code Pro'",fontWeight:"400",fontLigatures:true,links:false,fontSize:16}),e.getModel()?.setEOL(editor.EndOfLineSequence.LF),e.onKeyDown(t=>{t.ctrlKey&&t.code==="KeyS"&&(t.preventDefault(),validate(a),a.element?.submit());}),e.onDidChangeModelLanguageConfiguration(()=>e.getAction("editor.action.formatDocument")?.run()),e.onDidLayoutChange(()=>e.getAction("editor.action.formatDocument")?.run()),window.addEventListener("load",()=>e.getAction("editor.action.formatDocument")?.run()),setTimeout(()=>e.getAction("editor.action.formatDocument")?.run(),1e3),createEffect(on(g[0],t=>e.getModel()?.setValue(t))));}),onCleanup(()=>{console.log(o),console.log(2);}),(()=>{var t=M();return insert(t,createComponent(i,{method:"post",onSubmit:q,get children(){return [createComponent(p,{name:"Content",get validate(){return [required(`Please enter some ${r}.`)]},children:(s,d)=>(()=>{var n=D(),h=n.firstChild,c=h.firstChild,C=c.nextSibling,$=o;return typeof $=="function"?use($,c):o=c,insert(h,(()=>{var y=createMemo(()=>!!s.error);return ()=>y()&&(()=>{var u=k(),S=u.firstChild;S.firstChild;return u.$$click=()=>{clearError(a,"Content"),e.focus();},insert(S,()=>s.error,null),u})()})(),C),spread(C,mergeProps(d,{type:"hidden",required:true}),false),n})()}),createComponent(p,{name:"Field",children:(s,d)=>(()=>{var n=x();return spread(n,mergeProps(d,{value:r}),false),n})()})]}})),t})()};const W=r=>{switch(r){case "CSS":return `
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var _tmpl$ = /* @__PURE__ */ template(`<div>`), _tmpl$2 = /* @__PURE__ */ template(`<div class=w-full><div class=Editor><code class=Monaco></code><input>`), _tmpl$3 = /* @__PURE__ */ template(`<div class=Error><span>&nbsp;&nbsp;&nbsp;`), _tmpl$4 = /* @__PURE__ */ template(`<input type=hidden>`);
+var Editor_default = /* @__PURE__ */ __name(({
+  Type
+} = {
+  Type: "HTML"
+}) => {
+  const [Edit, {
+    Form,
+    Field
+  }] = createForm();
+  const Content = createSignal$1(Return(Type));
+  let Code;
+  let Instance;
+  onMount(() => {
+    console.log(Code);
+    if (Code instanceof HTMLElement) {
+      Instance = editor.create(Code, {
+        value: Content[0](),
+        language: Type.toLowerCase(),
+        automaticLayout: true,
+        lineNumbers: "off",
+        "semanticHighlighting.enabled": "configuredByTheme",
+        autoClosingBrackets: "always",
+        autoIndent: "full",
+        tabSize: 4,
+        detectIndentation: false,
+        useTabStops: true,
+        minimap: {
+          enabled: false
+        },
+        scrollbar: {
+          useShadows: true,
+          horizontal: "hidden",
+          verticalScrollbarSize: 10,
+          verticalSliderSize: 4,
+          alwaysConsumeMouseWheel: false
+        },
+        folding: false,
+        theme: window.matchMedia("(prefers-color-scheme: dark)").matches ? "Dark" : "Light",
+        wrappingStrategy: "advanced",
+        // TODO: UNCOMMENT
+        // word: "on",
+        bracketPairColorization: {
+          enabled: true,
+          independentColorPoolPerBracketType: true
+        },
+        padding: {
+          top: 12,
+          bottom: 12
+        },
+        fixedOverflowWidgets: true,
+        tabCompletion: "on",
+        acceptSuggestionOnEnter: "on",
+        cursorWidth: 5,
+        roundedSelection: true,
+        matchBrackets: "always",
+        autoSurround: "languageDefined",
+        screenReaderAnnounceInlineSuggestion: false,
+        renderFinalNewline: "on",
+        selectOnLineNumbers: false,
+        formatOnType: true,
+        formatOnPaste: true,
+        fontFamily: "'Source Code Pro'",
+        fontWeight: "400",
+        fontLigatures: true,
+        links: false,
+        fontSize: 16
+      });
+      Instance.getModel()?.setEOL(editor.EndOfLineSequence.LF);
+      Instance.onKeyDown((Event) => {
+        if (Event.ctrlKey && Event.code === "KeyS") {
+          Event.preventDefault();
+          validate(Edit);
+          Edit.element?.submit();
+        }
+      });
+      Instance.onDidChangeModelLanguageConfiguration(() => Instance.getAction("editor.action.formatDocument")?.run());
+      Instance.onDidLayoutChange(() => Instance.getAction("editor.action.formatDocument")?.run());
+      window.addEventListener("load", () => Instance.getAction("editor.action.formatDocument")?.run());
+      setTimeout(() => Instance.getAction("editor.action.formatDocument")?.run(), 1e3);
+      createEffect(on(Content[0], (Content2) => Instance.getModel()?.setValue(Content2)));
+    }
+  });
+  onCleanup(() => {
+    console.log(Code);
+    console.log(2);
+  });
+  return (
+    // TODO: UNCOMMENT
+    // class={
+    // 	Action.Editors[0]()?.get(Identifier)?.Hidden ? "hidden" : ""
+    // }
+    (() => {
+      var _el$ = _tmpl$();
+      insert(_el$, createComponent(Form, {
+        method: "post",
+        onSubmit: Update,
+        get children() {
+          return [createComponent(Field, {
+            name: "Content",
+            get validate() {
+              return [required(`Please enter some ${Type}.`)];
+            },
+            children: /* @__PURE__ */ __name((Field2, Property) => (() => {
+              var _el$2 = _tmpl$2(), _el$3 = _el$2.firstChild, _el$4 = _el$3.firstChild, _el$5 = _el$4.nextSibling;
+              var _ref$ = Code;
+              typeof _ref$ === "function" ? use(_ref$, _el$4) : Code = _el$4;
+              insert(_el$3, (() => {
+                var _c$ = createMemo(() => !!Field2.error);
+                return () => _c$() && (() => {
+                  var _el$6 = _tmpl$3(), _el$7 = _el$6.firstChild; _el$7.firstChild;
+                  _el$6.$$click = () => {
+                    clearError(Edit, "Content");
+                    Instance.focus();
+                  };
+                  insert(_el$7, () => Field2.error, null);
+                  return _el$6;
+                })();
+              })(), _el$5);
+              spread(_el$5, mergeProps(Property, {
+                "type": "hidden",
+                "required": true
+              }), false);
+              return _el$2;
+            })(), "children")
+          }), createComponent(Field, {
+            name: "Field",
+            children: /* @__PURE__ */ __name((_Field, Property) => (() => {
+              var _el$9 = _tmpl$4();
+              spread(_el$9, mergeProps(Property, {
+                "value": Type
+              }), false);
+              return _el$9;
+            })(), "children")
+          })];
+        }
+      }));
+      return _el$;
+    })()
+  );
+}, "default");
+const Return = /* @__PURE__ */ __name((Type) => {
+  switch (Type) {
+    case "CSS":
+      return `
 /* Example CSS Code */
 body {
 
 }			
-`;case "HTML":return `
+`;
+    case "HTML":
+      return `
 <!-- Example HTML Code -->
 <!doctype html>
 <html lang="en">
 	<body>
 	</body>
 </html>
-`;case "TypeScript":return `
+`;
+    case "TypeScript":
+      return `
 /**
  * Example TypeScript Code
  */
 export default () => ({});
-`;default:return ""}},q=({Content:r,Field:a},i)=>{i&&i.preventDefault();};delegateEvents(["click"]);
+`;
+    default:
+      return "";
+  }
+}, "Return");
+const Update = /* @__PURE__ */ __name(({
+  Content,
+  Field
+}, Event) => {
+  if (Event) {
+    Event.preventDefault();
+  }
+}, "Update");
+delegateEvents(["click"]);
 
-export { W as Return, q as Update, re as default };
-//# sourceMappingURL=Editor.CAOQyrFx.js.map
+export { Return, Update, Editor_default as default };
+//# sourceMappingURL=Editor.Ba3oRx9O.js.map

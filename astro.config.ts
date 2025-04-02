@@ -99,7 +99,7 @@ export default defineConfig({
 				: {}),
 		},
 		resolve: {
-			preserveSymlinks: true,
+			preserveSymlinks: false,
 		},
 		css: {
 			devSourcemap: On,

@@ -107,7 +107,7 @@ export default defineConfig({
 					"@microsoft/1ds-post-js",
 				].map((Module) => ({
 					find: Module,
-					replacement: new URL("./Source/Empty.ts", import.meta.url)
+					replacement: new URL("./Source/Shim.ts", import.meta.url)
 						.pathname,
 				})),
 			],

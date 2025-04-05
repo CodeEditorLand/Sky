@@ -100,6 +100,17 @@ export default defineConfig({
 		},
 		resolve: {
 			preserveSymlinks: false,
+			alias: [
+				...[
+					"vscode",
+					"@microsoft/1ds-core-js",
+					"@microsoft/1ds-post-js",
+				].map((Module) => ({
+					find: Module,
+					replacement: new URL("./Source/Empty.ts", import.meta.url)
+						.pathname,
+				})),
+			],
 		},
 		css: {
 			devSourcemap: On,

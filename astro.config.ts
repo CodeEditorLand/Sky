@@ -120,9 +120,9 @@ export default defineConfig({
 			(await import("vite-plugin-top-level-await")).default(),
 			((Module: string[]) => ({
 				name: "NodeModules",
-				configureServer: (server: ViteDevServer): void => {
-					server.watcher.options = {
-						...server.watcher.options,
+				configureServer: (Server: ViteDevServer): void => {
+					Server.watcher.options = {
+						...Server.watcher.options,
 						ignored: [
 							new RegExp(
 								`/node_modules\\/(?!${Module.join("|")}).*/`,
